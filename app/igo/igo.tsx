@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
 interface Move {
   player: 'black' | 'white';
@@ -8,8 +10,19 @@ interface Move {
 }
 
 const Igo = () => {
-  const [moves, setMoves] = useState<Move[]>([]);
-  const [currentPlayer, setCurrentPlayer] = useState<'black' | 'white'>('black');
+  const [moves, setMoves] = useState<Move[]>([
+    { player: 'black', position: [1, 6] },
+    { player: 'white', position: [1, 5] },
+    { player: 'black', position: [2, 6] },
+    { player: 'white', position: [2, 4] },
+    { player: 'black', position: [2, 5] },
+    { player: 'white', position: [1, 3] },
+    { player: 'black', position: [1, 4] },
+    { player: 'white', position: [2, 3] },
+    { player: 'black', position: [0, 5] },
+  ]);
+  const [currentPlayer, setCurrentPlayer] = useState<'black' | 'white'>('white');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const handleClick = (row: number, col: number) => {
     if (moves.some(move => move.position[0] === row && move.position[1] === col)) {
@@ -17,10 +30,53 @@ const Igo = () => {
     }
     const newMove: Move = { player: currentPlayer, position: [row, col] };
     const newMoves = [...moves, newMove];
+
+    if (isForbiddenMove(newMoves, row, col, currentPlayer)) {
+      setSnackbarOpen(true);
+      return; // 着手禁止手の場合はここで終了
+    }
+
     setMoves(newMoves);
     console.log('Move History:', newMoves); // 着手履歴を表示
     setCurrentPlayer(currentPlayer === 'black' ? 'white' : 'black');
     setTimeout(() => checkAndRemoveCapturedStones(newMoves, currentPlayer), 0); // 新しい石が追加されてからチェックする
+  };
+
+  const isForbiddenMove = (moves: Move[], row: number, col: number, player: 'black' | 'white'): boolean => {
+    const opponent = player === 'black' ? 'white' : 'black';
+    const board: (null | 'black' | 'white')[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+
+    moves.forEach(move => {
+      board[move.position[0]][move.position[1]] = move.player;
+    });
+
+    const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
+    const stoneGroup: [number, number][] = [];
+
+    const getStoneGroup = (r: number, c: number) => {
+      if (r < 0 || r >= 9 || c < 0 || c >= 9) return;
+      if (board[r][c] !== player || visited[r][c]) return;
+      visited[r][c] = true;
+      stoneGroup.push([r, c]);
+      getStoneGroup(r - 1, c);
+      getStoneGroup(r + 1, c);
+      getStoneGroup(r, c - 1);
+      getStoneGroup(r, c + 1);
+    };
+
+    getStoneGroup(row, col);
+
+    const isGroupCaptured = (group: [number, number][]): boolean => {
+      for (const [r, c] of group) {
+        if (r > 0 && board[r - 1][c] === null) return false;
+        if (r < 8 && board[r + 1][c] === null) return false;
+        if (c > 0 && board[r][c - 1] === null) return false;
+        if (c < 8 && board[r][c + 1] === null) return false;
+      }
+      return true;
+    };
+
+    return isGroupCaptured(stoneGroup);
   };
 
   const checkAndRemoveCapturedStones = (moves: Move[], currentPlayer: 'black' | 'white') => {
@@ -77,6 +133,10 @@ const Igo = () => {
   const clearBoard = () => {
     setMoves([]);
     setCurrentPlayer('black');
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   const lines = [];
@@ -190,6 +250,11 @@ const Igo = () => {
         {touchableAreas}
         {stones}
       </div>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity="warning" sx={{ width: '100%' }}>
+          着手禁止手です
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
