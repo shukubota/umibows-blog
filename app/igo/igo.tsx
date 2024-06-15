@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import Stone from './components/Stone';
+import Board from './components/Board';
 
 interface Move {
   player: 'black' | 'white';
@@ -10,83 +12,59 @@ interface Move {
 }
 
 const Igo = () => {
-  const [moves, setMoves] = useState<Move[]>([
-    { player: 'black', position: [1, 6] },
-    { player: 'white', position: [1, 5] },
-    { player: 'black', position: [2, 6] },
-    { player: 'white', position: [2, 4] },
-    { player: 'black', position: [2, 5] },
-    { player: 'white', position: [1, 3] },
-    { player: 'black', position: [1, 4] },
-    { player: 'white', position: [2, 3] },
-    { player: 'black', position: [0, 5] },
-  ]);
-  const [currentPlayer, setCurrentPlayer] = useState<'black' | 'white'>('white');
+  const [moves, setMoves] = useState<Move[]>([]);
+  const [currentPlayer, setCurrentPlayer] = useState<'black' | 'white'>('black');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [blackCaptured, setBlackCaptured] = useState(0);
+  const [whiteCaptured, setWhiteCaptured] = useState(0);
+  const [blackTerritory, setBlackTerritory] = useState(0);
+  const [whiteTerritory, setWhiteTerritory] = useState(0);
+  const [boardState, setBoardState] = useState<(null | 'black' | 'white')[][]>(
+    Array(9).fill(null).map(() => Array(9).fill(null))
+  );
+
+  useEffect(() => {
+    updateTerritories();
+  }, [moves, boardState]);
 
   const handleClick = (row: number, col: number) => {
-    if (moves.some(move => move.position[0] === row && move.position[1] === col)) {
+    if (boardState[row][col] !== null) {
       return; // 石が置いてある場所には置けない
     }
     const newMove: Move = { player: currentPlayer, position: [row, col] };
     const newMoves = [...moves, newMove];
+    const newBoardState = boardState.map(row => row.slice());
+    newBoardState[row][col] = currentPlayer;
 
-    if (isForbiddenMove(newMoves, row, col, currentPlayer)) {
-      setSnackbarOpen(true);
-      return; // 着手禁止手の場合はここで終了
-    }
+    const capturedStones = checkAndRemoveCapturedStones(newBoardState, currentPlayer);
 
-    setMoves(newMoves);
-    console.log('Move History:', newMoves); // 着手履歴を表示
-    setCurrentPlayer(currentPlayer === 'black' ? 'white' : 'black');
-    setTimeout(() => checkAndRemoveCapturedStones(newMoves, currentPlayer), 0); // 新しい石が追加されてからチェックする
-  };
-
-  const isForbiddenMove = (moves: Move[], row: number, col: number, player: 'black' | 'white'): boolean => {
-    const opponent = player === 'black' ? 'white' : 'black';
-    const board: (null | 'black' | 'white')[][] = Array(9).fill(null).map(() => Array(9).fill(null));
-
-    moves.forEach(move => {
-      board[move.position[0]][move.position[1]] = move.player;
-    });
-
-    const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
-    const stoneGroup: [number, number][] = [];
-
-    const getStoneGroup = (r: number, c: number) => {
-      if (r < 0 || r >= 9 || c < 0 || c >= 9) return;
-      if (board[r][c] !== player || visited[r][c]) return;
-      visited[r][c] = true;
-      stoneGroup.push([r, c]);
-      getStoneGroup(r - 1, c);
-      getStoneGroup(r + 1, c);
-      getStoneGroup(r, c - 1);
-      getStoneGroup(r, c + 1);
-    };
-
-    getStoneGroup(row, col);
-
-    const isGroupCaptured = (group: [number, number][]): boolean => {
-      for (const [r, c] of group) {
-        if (r > 0 && board[r - 1][c] === null) return false;
-        if (r < 8 && board[r + 1][c] === null) return false;
-        if (c > 0 && board[r][c - 1] === null) return false;
-        if (c < 8 && board[r][c + 1] === null) return false;
+    if (capturedStones.length > 0 || !isGroupCaptured([[row, col]], newBoardState)) {
+      setMoves(newMoves);
+      setBoardState(newBoardState);
+      if (currentPlayer === 'black') {
+        setWhiteCaptured(whiteCaptured + capturedStones.length); // 白が取られた石の数を更新
+      } else {
+        setBlackCaptured(blackCaptured + capturedStones.length); // 黒が取られた石の数を更新
       }
-      return true;
-    };
-
-    return isGroupCaptured(stoneGroup);
+      setCurrentPlayer(currentPlayer === 'black' ? 'white' : 'black');
+    } else {
+      setSnackbarOpen(true);
+    }
+    console.log('Move History:', JSON.stringify(newMoves)); // 着手履歴を文字列として表示
   };
 
-  const checkAndRemoveCapturedStones = (moves: Move[], currentPlayer: 'black' | 'white') => {
+  const isGroupCaptured = (group: [number, number][], board: (null | 'black' | 'white')[][]): boolean => {
+    for (const [r, c] of group) {
+      if (r > 0 && board[r - 1][c] === null) return false;
+      if (r < 8 && board[r + 1][c] === null) return false;
+      if (c > 0 && board[r][c - 1] === null) return false;
+      if (c < 8 && board[r][c + 1] === null) return false;
+    }
+    return true;
+  };
+
+  const checkAndRemoveCapturedStones = (board: (null | 'black' | 'white')[][], currentPlayer: 'black' | 'white'): [number, number][] => {
     const opponent = currentPlayer === 'black' ? 'white' : 'black';
-    const board: (null | 'black' | 'white')[][] = Array(9).fill(null).map(() => Array(9).fill(null));
-
-    moves.forEach(move => {
-      board[move.position[0]][move.position[1]] = move.player;
-    });
-
     const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
 
     const getStoneGroup = (r: number, c: number, color: 'black' | 'white', group: [number, number][]) => {
@@ -100,39 +78,75 @@ const Igo = () => {
       getStoneGroup(r, c + 1, color, group);
     };
 
-    const isGroupCaptured = (group: [number, number][], color: 'black' | 'white'): boolean => {
-      for (const [r, c] of group) {
-        if (r > 0 && board[r - 1][c] === null) return false;
-        if (r < 8 && board[r + 1][c] === null) return false;
-        if (c > 0 && board[r][c - 1] === null) return false;
-        if (c < 8 && board[r][c + 1] === null) return false;
-      }
-      return true;
-    };
-
     const capturedStones: [number, number][] = [];
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
         if (board[r][c] === opponent && !visited[r][c]) {
           const group: [number, number][] = [];
           getStoneGroup(r, c, opponent, group);
-          if (isGroupCaptured(group, opponent)) {
+          if (isGroupCaptured(group, board)) {
             capturedStones.push(...group);
+            // Remove captured stones from board
+            group.forEach(([gr, gc]) => {
+              board[gr][gc] = null;
+            });
           }
         }
       }
     }
 
-    const newMoves = moves.filter(move => {
-      return !capturedStones.some(stone => stone[0] === move.position[0] && stone[1] === move.position[1]);
-    });
+    return capturedStones;
+  };
 
-    setMoves(newMoves);
+  const updateTerritories = () => {
+    const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
+    let blackTerritory = 0;
+    let whiteTerritory = 0;
+
+    const checkTerritory = (r: number, c: number, color: 'black' | 'white'): number => {
+      if (r < 0 || r >= 9 || c < 0 || c >= 9) return 0;
+      if (boardState[r][c] !== null || visited[r][c]) return 0;
+      visited[r][c] = true;
+
+      let territory = 1;
+      if ((r > 0 && boardState[r - 1][c] !== color && boardState[r - 1][c] !== null) ||
+        (r < 8 && boardState[r + 1][c] !== color && boardState[r + 1][c] !== null) ||
+        (c > 0 && boardState[r][c - 1] !== color && boardState[r][c - 1] !== null) ||
+        (c < 8 && boardState[r][c + 1] !== color && boardState[r][c + 1] !== null)) {
+        return 0; // 周りに違う色がある場合は0
+      }
+      territory += checkTerritory(r - 1, c, color);
+      territory += checkTerritory(r + 1, c, color);
+      territory += checkTerritory(r, c - 1, color);
+      territory += checkTerritory(r, c + 1, color);
+
+      return territory;
+    };
+
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (!visited[r][c] && boardState[r][c] === null) {
+          if ((r > 0 && boardState[r - 1][c] === 'black') || (r < 8 && boardState[r + 1][c] === 'black') ||
+            (c > 0 && boardState[r][c - 1] === 'black') || (c < 8 && boardState[r][c + 1] === 'black')) {
+            blackTerritory += checkTerritory(r, c, 'black');
+          } else if ((r > 0 && boardState[r - 1][c] === 'white') || (r < 8 && boardState[r + 1][c] === 'white') ||
+            (c > 0 && boardState[r][c - 1] === 'white') || (c < 8 && boardState[r][c + 1] === 'white')) {
+            whiteTerritory += checkTerritory(r, c, 'white');
+          }
+        }
+      }
+    }
+
+    setBlackTerritory(blackTerritory);
+    setWhiteTerritory(whiteTerritory);
   };
 
   const clearBoard = () => {
     setMoves([]);
     setCurrentPlayer('black');
+    setBlackCaptured(0);
+    setWhiteCaptured(0);
+    setBoardState(Array(9).fill(null).map(() => Array(9).fill(null)));
   };
 
   const handleCloseSnackbar = () => {
@@ -219,24 +233,6 @@ const Igo = () => {
     }
   }
 
-  const stones = moves.map((move, index) => {
-    const [row, col] = move.position;
-    const color = move.player === 'black' ? 'bg-black' : 'bg-white';
-    return (
-      <div
-        key={`stone-${index}`}
-        className={`absolute ${color} rounded-full border border-black`}
-        style={{
-          top: `${(row + 1) * 10}%`,
-          left: `${(col + 1) * 10}%`,
-          width: '8%',
-          height: '8%',
-          transform: 'translate(-50%, -50%)',
-        }}
-      />
-    );
-  });
-
   return (
     <div className="flex flex-col items-center h-screen">
       <button
@@ -245,11 +241,22 @@ const Igo = () => {
       >
         Clear Board
       </button>
-      <div className="relative w-[85vw] h-[85vw] bg-board">
-        {lines}
-        {touchableAreas}
-        {stones}
+      <Board lines={lines} touchableAreas={touchableAreas} stones={
+        boardState.flatMap((row, rowIndex) =>
+          row.map((cell, colIndex) =>
+            cell !== null ? <Stone key={`stone-${rowIndex}-${colIndex}`} color={cell} position={[rowIndex, colIndex]} /> : null
+          )
+        )
+      } />
+      <div className="mt-4 flex justify-between w-[85vw]" style={{ color: 'black' }}>
+        <div>黒の取った石の数: {blackCaptured}</div>
+        <div>白の取った石の数: {whiteCaptured}</div>
       </div>
+      <div className="mt-2 flex justify-between w-[85vw]" style={{ color: 'black' }}>
+        <div>黒の囲った交差点の数: {blackTerritory}</div>
+        <div>白の囲った交差点の数: {whiteTerritory}</div>
+      </div>
+
       <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity="warning" sx={{ width: '100%' }}>
           着手禁止手です
