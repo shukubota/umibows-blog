@@ -28,29 +28,72 @@ const Igo = () => {
   }, [moves, boardState]);
 
   const handleClick = (row: number, col: number) => {
-    if (boardState[row][col] !== null) {
+    if (boardState[row - 1][col - 1] !== null) {
       return; // 石が置いてある場所には置けない
     }
-    const newMove: Move = { player: currentPlayer, position: [row, col] };
+    const newMove: Move = { player: currentPlayer, position: [col, row] }; // 座標を(1,1)から(9,9)に変換
     const newMoves = [...moves, newMove];
     const newBoardState = boardState.map(row => row.slice());
-    newBoardState[row][col] = currentPlayer;
+    newBoardState[row - 1][col - 1] = currentPlayer; // 座標を(1,1)から(9,9)に変換
+
+    if (isForbiddenMove(boardState, row, col, currentPlayer)) {
+      setSnackbarOpen(true);
+      return; // 着手禁止手の場合はここで終了
+    }
 
     const capturedStones = checkAndRemoveCapturedStones(newBoardState, currentPlayer);
 
-    if (capturedStones.length > 0 || !isGroupCaptured([[row, col]], newBoardState)) {
-      setMoves(newMoves);
-      setBoardState(newBoardState);
-      if (currentPlayer === 'black') {
-        setWhiteCaptured(whiteCaptured + capturedStones.length); // 白が取られた石の数を更新
-      } else {
-        setBlackCaptured(blackCaptured + capturedStones.length); // 黒が取られた石の数を更新
-      }
-      setCurrentPlayer(currentPlayer === 'black' ? 'white' : 'black');
+    setMoves(newMoves);
+    setBoardState(newBoardState);
+    if (currentPlayer === 'black') {
+      setWhiteCaptured(whiteCaptured + capturedStones.length); // 白が取られた石の数を更新
     } else {
-      setSnackbarOpen(true);
+      setBlackCaptured(blackCaptured + capturedStones.length); // 黒が取られた石の数を更新
     }
+    setCurrentPlayer(currentPlayer === 'black' ? 'white' : 'black');
     console.log('Move History:', JSON.stringify(newMoves)); // 着手履歴を文字列として表示
+  };
+
+  const isForbiddenMove = (board: (null | 'black' | 'white')[][], row: number, col: number, player: 'black' | 'white'): boolean => {
+    const opponent = player === 'black' ? 'white' : 'black';
+    const newBoard = board.map(row => row.slice());
+    newBoard[row - 1][col - 1] = player;
+
+    const capturedStones = checkAndRemoveCapturedStones(newBoard, player);
+    if (capturedStones.length > 0) {
+      return false; // 相手の石が取れる場合は着手禁止ではない
+    }
+
+    const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
+    const stoneGroup: [number, number][] = [];
+
+    const getStoneGroup = (r: number, c: number, color: 'black' | 'white') => {
+      if (r < 0 || r >= 9 || c < 0 || c >= 9) return;
+      if (newBoard[r][c] !== color || visited[r][c]) return;
+      visited[r][c] = true;
+      stoneGroup.push([r, c]);
+      getStoneGroup(r - 1, c, color);
+      getStoneGroup(r + 1, c, color);
+      getStoneGroup(r, c - 1, color);
+      getStoneGroup(r, c + 1, color);
+    };
+
+    getStoneGroup(row - 1, col - 1, player);
+
+    const surroundedByOwn = stoneGroup.every(([r, c]) => {
+      return (
+        (r > 0 && newBoard[r - 1][c] !== opponent) &&
+        (r < 8 && newBoard[r + 1][c] !== opponent) &&
+        (c > 0 && newBoard[r][c - 1] !== opponent) &&
+        (c < 8 && newBoard[r][c + 1] !== opponent)
+      );
+    });
+
+    if (surroundedByOwn) {
+      return false; // 自分の石で囲まれている場合は着手禁止ではない
+    }
+
+    return isGroupCaptured(stoneGroup, newBoard);
   };
 
   const isGroupCaptured = (group: [number, number][], board: (null | 'black' | 'white')[][]): boolean => {
@@ -213,15 +256,15 @@ const Igo = () => {
   }
 
   // Create touchable areas
-  for (let i = 0; i < 9; i++) {
-    for (let j = 0; j < 9; j++) {
+  for (let i = 1; i <= 9; i++) {
+    for (let j = 1; j <= 9; j++) {
       touchableAreas.push(
         <div
           key={`touch-${i}-${j}`}
           className="absolute w-8 h-8"
           style={{
-            top: `${(i + 1) * 10}%`,
-            left: `${(j + 1) * 10}%`,
+            top: `${i * 10}%`,
+            left: `${j * 10}%`,
             width: '8%',
             height: '8%',
             transform: 'translate(-50%, -50%)',
@@ -244,7 +287,7 @@ const Igo = () => {
       <Board lines={lines} touchableAreas={touchableAreas} stones={
         boardState.flatMap((row, rowIndex) =>
           row.map((cell, colIndex) =>
-            cell !== null ? <Stone key={`stone-${rowIndex}-${colIndex}`} color={cell} position={[rowIndex, colIndex]} /> : null
+            cell !== null ? <Stone key={`stone-${rowIndex}-${colIndex}`} color={cell} position={[colIndex + 1, rowIndex + 1]} /> : null
           )
         )
       } />
