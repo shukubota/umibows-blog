@@ -5,6 +5,7 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Stone from './components/Stone';
 import Board from './components/Board';
+import Marker from './components/Marker';
 
 interface Move {
   player: 'black' | 'white';
@@ -141,6 +142,35 @@ const Igo = () => {
     return capturedStones;
   };
 
+  const checkLifeAndDeath = (): [number, number][] => {
+    const deadStones: [number, number][] = [];
+    const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
+
+    const getStoneGroup = (r: number, c: number, color: 'black' | 'white', group: [number, number][]) => {
+      if (r < 0 || r >= 9 || c < 0 || c >= 9) return;
+      if (boardState[r][c] !== color || visited[r][c]) return;
+      visited[r][c] = true;
+      group.push([r, c]);
+      getStoneGroup(r - 1, c, color, group);
+      getStoneGroup(r + 1, c, color, group);
+      getStoneGroup(r, c - 1, color, group);
+      getStoneGroup(r, c + 1, color, group);
+    };
+
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (boardState[r][c] !== null && !visited[r][c]) {
+          const group: [number, number][] = [];
+          getStoneGroup(r, c, boardState[r][c]!, group);
+          if (isGroupCaptured(group, boardState)) {
+            deadStones.push(...group);
+          }
+        }
+      }
+    }
+
+    return deadStones;
+  };
   const updateTerritories = () => {
     const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
     let blackTerritory = 0;
@@ -276,6 +306,8 @@ const Igo = () => {
     }
   }
 
+  const deadStones = checkLifeAndDeath();
+
   return (
     <div className="flex flex-col items-center h-screen">
       <button
@@ -287,7 +319,12 @@ const Igo = () => {
       <Board lines={lines} touchableAreas={touchableAreas} stones={
         boardState.flatMap((row, rowIndex) =>
           row.map((cell, colIndex) =>
-            cell !== null ? <Stone key={`stone-${rowIndex}-${colIndex}`} color={cell} position={[colIndex + 1, rowIndex + 1]} /> : null
+            cell !== null ? (
+              <React.Fragment key={`stone-${rowIndex}-${colIndex}`}>
+                <Stone color={cell} position={[colIndex + 1, rowIndex + 1]} />
+                {deadStones.some(([r, c]) => r === rowIndex && c === colIndex) && <Marker position={[colIndex + 1, rowIndex + 1]} />}
+              </React.Fragment>
+            ) : null
           )
         )
       } />
