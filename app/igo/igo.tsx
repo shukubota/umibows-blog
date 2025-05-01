@@ -141,7 +141,6 @@ const Igo = () => {
 
     return capturedStones;
   };
-
   const checkLifeAndDeath = (): [number, number][] => {
     const deadStones: [number, number][] = [];
     const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
@@ -157,12 +156,22 @@ const Igo = () => {
       getStoneGroup(r, c + 1, color, group);
     };
 
+    const isGroupAlive = (group: [number, number][], board: (null | 'black' | 'white')[][]): boolean => {
+      for (const [r, c] of group) {
+        if (r > 0 && board[r - 1][c] === null) return true;
+        if (r < 8 && board[r + 1][c] === null) return true;
+        if (c > 0 && board[r][c - 1] === null) return true;
+        if (c < 8 && board[r][c + 1] === null) return true;
+      }
+      return false;
+    };
+
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
         if (boardState[r][c] !== null && !visited[r][c]) {
           const group: [number, number][] = [];
           getStoneGroup(r, c, boardState[r][c]!, group);
-          if (isGroupCaptured(group, boardState)) {
+          if (!isGroupAlive(group, boardState)) {
             deadStones.push(...group);
           }
         }
