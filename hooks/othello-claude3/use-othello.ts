@@ -17,6 +17,7 @@ export const useOthello = () => {
   const [currentPlayer, setCurrentPlayer] = useState<Player>('black');
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState<Player | 'draw' | null>(null);
+  const [message, setMessage] = useState<string>('');
 
   const countDiscs = useCallback(() => {
     let blackCount = 0;
@@ -88,6 +89,24 @@ export const useOthello = () => {
     setBoard(newBoard);
   };
 
+  const checkAndHandlePass = (player: Player): boolean => {
+    if (!hasValidMoves(player)) {
+      const oppositePlayer = player === 'black' ? 'white' : 'black';
+      if (hasValidMoves(oppositePlayer)) {
+        setMessage(`${player === 'black' ? 'Player' : 'CPU'} passes`);
+        setTimeout(() => {
+          setMessage('');
+          setCurrentPlayer(oppositePlayer);
+        }, 2000);
+        return true;
+      } else {
+        endGame();
+        return true;
+      }
+    }
+    return false;
+  };
+
   const placeDisc = (row: number, col: number): boolean => {
     if (gameOver || !isValidMove(row, col, currentPlayer)) return false;
 
@@ -95,12 +114,8 @@ export const useOthello = () => {
     const nextPlayer = currentPlayer === 'black' ? 'white' : 'black';
     setCurrentPlayer(nextPlayer);
 
-    if (!hasValidMoves(nextPlayer)) {
-      if (!hasValidMoves(currentPlayer)) {
-        endGame();
-      } else {
-        setCurrentPlayer(currentPlayer);
-      }
+    if (checkAndHandlePass(nextPlayer)) {
+      return true;
     }
 
     return true;
@@ -134,6 +149,7 @@ export const useOthello = () => {
     setCurrentPlayer('black');
     setGameOver(false);
     setWinner(null);
+    setMessage('');
   };
 
   return {
@@ -145,5 +161,7 @@ export const useOthello = () => {
     whiteCount,
     gameOver,
     winner,
+    message,
+    checkAndHandlePass,
   };
 };
