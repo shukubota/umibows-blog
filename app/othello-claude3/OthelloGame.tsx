@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useOthello } from '../../hooks/othello-claude3/use-othello';
 
 const OthelloGame: React.FC = () => {
@@ -13,9 +13,9 @@ const OthelloGame: React.FC = () => {
     whiteCount,
     gameOver,
     winner,
+    message,
+    checkAndHandlePass,
   } = useOthello();
-
-  const [message, setMessage] = useState<string>('');
 
   useEffect(() => {
     if (currentPlayer === 'white' && !gameOver) {
@@ -25,12 +25,11 @@ const OthelloGame: React.FC = () => {
           const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
           placeDisc(randomMove[0], randomMove[1]);
         } else {
-          setMessage('CPU passes');
-          setTimeout(() => setMessage(''), 1000);
+          checkAndHandlePass('white');
         }
       }, 1000);
     }
-  }, [currentPlayer, gameOver]);
+  }, [currentPlayer, gameOver, board]);
 
   const getAvailableMoves = (board: string[][], player: 'black' | 'white') => {
     const moves: [number, number][] = [];
@@ -73,15 +72,14 @@ const OthelloGame: React.FC = () => {
     if (currentPlayer === 'black' && !gameOver) {
       const result = placeDisc(row, col);
       if (!result) {
-        setMessage('Invalid move');
-        setTimeout(() => setMessage(''), 1000);
+        checkAndHandlePass('black');
       }
     }
   };
 
   return (
     <div className="flex flex-col items-center">
-      <div className="w-4/5 aspect-square bg-green-600 border border-black">
+      <div className="w-[95%] max-w-[600px] aspect-square bg-green-600 border border-black">
         {board.map((row, rowIndex) => (
           <div key={rowIndex} className="flex">
             {row.map((cell, colIndex) => (
@@ -112,7 +110,7 @@ const OthelloGame: React.FC = () => {
       >
         Reset Game
       </button>
-      {message && <div className="mt-2 text-red-500">{message}</div>}
+      {message && <div className="mt-2 text-xl font-bold">{message}</div>}
       {gameOver && (
         <div className="mt-4 text-2xl font-bold">
           {winner === 'draw' ? "It's a draw!" : `${winner === 'black' ? 'Black' : 'White'} wins!`}
