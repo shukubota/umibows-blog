@@ -4,6 +4,9 @@ export default function Home() {
   const blogs = [
     { id: "double-pendulum", title: "Double Pendulum Simulation", path: "/double-pendulum" },
     { id: "numerical-comparison", title: "Numerical Integration Comparison (Euler vs RK4)", path: "/numerical-comparison" },
+    { id: "lorenz", title: "Lorenz Attractor Simulation", path: "/lorenz" },
+    { id: "tex", title: "TeX Previewer", path: "/tex" },
+    { id: "igo", title: "Igo (Go Game)", path: "/igo" },
     { id: 2, title: "Second Blog Post", path: "/blog/2" },
     { id: 3, title: "Third Blog Post", path: "/blog/3" },
   ];
