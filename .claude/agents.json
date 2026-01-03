@@ -98,6 +98,27 @@
         "Environment configuration",
         "Rate limiting strategies"
       ]
+    },
+    {
+      "name": "git-workflow-automator",
+      "description": "Automates git operations with intelligent commit messages and workflow management",
+      "triggers": [
+        "commit",
+        "push",
+        "save changes",
+        "save work",
+        "git",
+        "stage",
+        "repository"
+      ],
+      "tools": ["Bash", "Read", "Grep"],
+      "expertise": [
+        "Intelligent commit message generation",
+        "Automatic file staging",
+        "Git status analysis",
+        "Branch management",
+        "Repository validation"
+      ]
     }
   ]
 }

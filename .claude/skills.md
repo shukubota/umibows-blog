@@ -65,3 +65,16 @@
 - Rate limiting and optimization
 
 **Usage**: Use for any external API integrations or improvements to existing API connections like the handwriting recognition feature.
+
+## Git Workflow Agent
+**Name**: `git-workflow-automator`  
+**Description**: Automates git operations including staging, committing, and pushing changes with proper commit messages.
+
+**Skills**:
+- Intelligent commit message generation based on file changes
+- Automatic staging of related files
+- Git status analysis and conflict resolution
+- Branch management and PR creation
+- Repository state validation before commits
+
+**Usage**: Use when you need to commit and push changes, or when managing git workflows. Can be triggered with keywords like "commit", "push", "save changes".
