@@ -17,6 +17,11 @@ export default function TexPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
 
+    // Drawing canvas state
+    const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [lastPosition, setLastPosition] = useState<{x: number, y: number} | null>(null);
+
     useEffect(() => {
         try {
             const rendered = katex.renderToString(input, {
@@ -90,6 +95,122 @@ export default function TexPage() {
         }
     };
 
+    // Drawing functions
+    const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault();
+        const canvas = drawingCanvasRef.current;
+        if (!canvas) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        let clientX, clientY;
+        if ('touches' in e) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const x = (clientX - rect.left) * scaleX;
+        const y = (clientY - rect.top) * scaleY;
+
+        setIsDrawing(true);
+        setLastPosition({ x, y });
+    };
+
+    const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault();
+        if (!isDrawing || !lastPosition) return;
+
+        const canvas = drawingCanvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!canvas || !ctx) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        let clientX, clientY;
+        if ('touches' in e) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const x = (clientX - rect.left) * scaleX;
+        const y = (clientY - rect.top) * scaleY;
+
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#000000';
+
+        ctx.beginPath();
+        ctx.moveTo(lastPosition.x, lastPosition.y);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        setLastPosition({ x, y });
+    };
+
+    const stopDrawing = () => {
+        setIsDrawing(false);
+        setLastPosition(null);
+    };
+
+    const clearDrawing = () => {
+        const canvas = drawingCanvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!canvas || !ctx) return;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+
+    const processDrawing = async () => {
+        const canvas = drawingCanvasRef.current;
+        if (!canvas) return;
+
+        setIsProcessing(true);
+        setError(null);
+
+        try {
+            const imageData = canvas.toDataURL('image/jpeg');
+            const result = await generateTexFromImage(imageData);
+            if (result.error) {
+                setError(result.error);
+            } else if (result.tex) {
+                setInput(result.tex);
+            }
+        } catch (err) {
+            console.error("Error processing drawing:", err);
+            setError("Failed to process drawing.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Initialize drawing canvas
+    useEffect(() => {
+        const canvas = drawingCanvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Set canvas size
+        canvas.width = 400;
+        canvas.height = 300;
+
+        // Fill with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }, []);
+
     return (
         <div className="min-h-screen bg-gray-900 text-white p-8 font-sans">
             <div className="max-w-4xl mx-auto space-y-8">
@@ -98,7 +219,7 @@ export default function TexPage() {
                         TeX Previewer
                     </h1>
                     <p className="text-gray-400">
-                        Type LaTeX math expressions below to see them rendered in real-time.
+                        Type LaTeX math expressions or draw them by hand to see them rendered in real-time.
                     </p>
                 </header>
 
@@ -161,6 +282,65 @@ export default function TexPage() {
 
                     {/* Hidden Canvas for Capture */}
                     <canvas ref={canvasRef} className="hidden" />
+                </section>
+
+                {/* Drawing Panel Section */}
+                <section className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-green-300">Draw Mathematical Expression</h2>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={clearDrawing}
+                                className="px-3 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                </svg>
+                                Clear
+                            </button>
+                            <button
+                                onClick={processDrawing}
+                                disabled={isProcessing}
+                                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                            >
+                                {isProcessing ? (
+                                    <>
+                                        <svg className="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                                        </svg>
+                                        Convert to TeX
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div className="flex justify-center mb-4">
+                        <canvas
+                            ref={drawingCanvasRef}
+                            onMouseDown={startDrawing}
+                            onMouseMove={draw}
+                            onMouseUp={stopDrawing}
+                            onMouseLeave={stopDrawing}
+                            onTouchStart={startDrawing}
+                            onTouchMove={draw}
+                            onTouchEnd={stopDrawing}
+                            className="border border-gray-600 rounded-lg bg-white cursor-crosshair touch-none"
+                            style={{ maxWidth: '100%', height: 'auto' }}
+                        />
+                    </div>
+                    
+                    <p className="text-sm text-gray-400 text-center">
+                        Draw mathematical expressions above and click "Convert to TeX" to generate LaTeX code
+                    </p>
                 </section>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
