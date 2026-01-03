@@ -16,7 +16,7 @@ export async function generateTexFromImage(imageBase64: string): Promise<{ tex: 
         const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
         const message = await anthropic.messages.create({
-            model: 'claude-3-5-sonnet-latest',
+            model: 'claude-3-haiku-20240307',
             max_tokens: 1024,
             messages: [
                 {
@@ -32,7 +32,7 @@ export async function generateTexFromImage(imageBase64: string): Promise<{ tex: 
                         },
                         {
                             type: 'text',
-                            text: 'Convert the handwritten mathematical expression in this image to valid LaTeX. Return ONLY the LaTeX code. Do not include markdown code blocks (like ```latex or ```), do not include any explanatory text. Just the raw LaTeX string.',
+                            text: 'Convert the handwritten mathematical expression in this image to valid LaTeX code suitable for KaTeX rendering. Return ONLY the raw LaTeX expression without any delimiters like $ or $$, without markdown code blocks, and without explanatory text. For example, return just "\\frac{1}{2}" not "$\\frac{1}{2}$" or "$$\\frac{1}{2}$$".',
                         },
                     ],
                 },
@@ -48,15 +48,17 @@ export async function generateTexFromImage(imageBase64: string): Promise<{ tex: 
 
         console.log('Claude Response:', cleanTex);
 
-        // Clean up response if it still has markdown
+        // Clean up response if it still has markdown or delimiters
         if (cleanTex.startsWith('```latex')) {
             cleanTex = cleanTex.replace(/^```latex/, '').replace(/```$/, '').trim();
         } else if (cleanTex.startsWith('```')) {
             cleanTex = cleanTex.replace(/^```/, '').replace(/```$/, '').trim();
         }
 
+        // Remove various LaTeX delimiters
         cleanTex = cleanTex.replace(/^\\\[/, '').replace(/\\\]$/, '').trim();
         cleanTex = cleanTex.replace(/^\$\$/, '').replace(/\$\$$/, '').trim();
+        cleanTex = cleanTex.replace(/^\$/, '').replace(/\$$/, '').trim();
 
         return { tex: cleanTex };
     } catch (error: any) {
