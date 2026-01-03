@@ -1,0 +1,103 @@
+{
+  "agents": [
+    {
+      "name": "math-content-specialist",
+      "description": "Specializes in LaTeX, mathematical expressions, and KaTeX integration",
+      "triggers": [
+        "tex",
+        "latex",
+        "katex",
+        "mathematical",
+        "equation",
+        "formula"
+      ],
+      "tools": ["Read", "Edit", "Write", "Grep", "Bash"],
+      "expertise": [
+        "LaTeX expression validation",
+        "KaTeX rendering troubleshooting", 
+        "Mathematical notation optimization",
+        "Claude API handwriting recognition"
+      ]
+    },
+    {
+      "name": "visualization-developer", 
+      "description": "Expert in interactive visualizations and Canvas-based applications",
+      "triggers": [
+        "canvas",
+        "animation",
+        "visualization",
+        "interactive",
+        "game",
+        "simulation"
+      ],
+      "tools": ["Read", "Edit", "Write", "Bash"],
+      "expertise": [
+        "HTML5 Canvas programming",
+        "Physics simulations",
+        "Game logic implementation",
+        "Touch/mouse event handling",
+        "Animation performance optimization"
+      ]
+    },
+    {
+      "name": "nextjs-architect",
+      "description": "Next.js 14 app router architecture and TypeScript specialist",
+      "triggers": [
+        "nextjs",
+        "app router",
+        "typescript",
+        "component",
+        "architecture",
+        "routing"
+      ],
+      "tools": ["Read", "Edit", "Write", "Glob", "Grep", "Bash"],
+      "expertise": [
+        "App router file structure",
+        "Server actions and API routes",
+        "Component architecture design",
+        "TypeScript type systems",
+        "Tailwind CSS integration"
+      ]
+    },
+    {
+      "name": "edu-content-creator",
+      "description": "Educational content and user experience optimization specialist",
+      "triggers": [
+        "ux",
+        "ui",
+        "educational",
+        "user experience",
+        "accessibility",
+        "mobile"
+      ],
+      "tools": ["Read", "Edit", "Write"],
+      "expertise": [
+        "Educational UX/UI patterns",
+        "Content flow optimization", 
+        "Accessibility improvements",
+        "Mobile responsiveness",
+        "User guidance systems"
+      ]
+    },
+    {
+      "name": "api-integration-specialist",
+      "description": "External API integration and AI services expert",
+      "triggers": [
+        "api",
+        "claude",
+        "anthropic",
+        "integration",
+        "external service",
+        "ai"
+      ],
+      "tools": ["Read", "Edit", "Write", "Bash", "Grep"],
+      "expertise": [
+        "Anthropic Claude API integration",
+        "Error handling and retry logic",
+        "API response processing",
+        "Environment configuration",
+        "Rate limiting strategies"
+      ]
+    }
+  ]
+}
