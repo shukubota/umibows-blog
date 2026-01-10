@@ -7,10 +7,11 @@ Umibows Blog - A Next.js blog with interactive mathematical visualizations and e
 
 ### Development
 ```bash
-npm run dev    # Start development server
-npm run build  # Build for production
-npm run start  # Start production server
-npm run lint   # Run ESLint
+npm run dev        # Start development server (HTTP)
+npm run dev:https  # Start development server with HTTPS (required for camera access)
+npm run build      # Build for production
+npm run start      # Start production server
+npm run lint       # Run ESLint
 ```
 
 ### Testing
