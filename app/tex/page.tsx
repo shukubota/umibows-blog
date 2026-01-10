@@ -13,6 +13,7 @@ export default function TexPage() {
     // Camera state
     const [isCameraOpen, setIsCameraOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [cameraStatus, setCameraStatus] = useState<string>('Ready');
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -37,15 +38,85 @@ export default function TexPage() {
 
     const startCamera = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            setError(null);
+            setCameraStatus('Requesting access...');
+            console.log("Requesting camera access...");
+            
+            // Check for camera availability first
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Camera not supported in this browser');
+            }
+            
+            // Try different camera constraints
+            let constraints = { 
+                video: { 
+                    facingMode: 'environment',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                } 
+            };
+            
+            let stream: MediaStream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (envError) {
+                console.log("Environment camera failed, trying user camera:", envError);
+                setCameraStatus('Trying front camera...');
+                // Fallback to front camera
+                constraints = { 
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    } 
+                };
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+            }
+            
+            console.log("Camera stream obtained:", stream);
+            setCameraStatus('Setting up video...');
+            
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
+                
+                // Ensure video plays when metadata is loaded
+                videoRef.current.onloadedmetadata = () => {
+                    console.log("Video metadata loaded");
+                    setCameraStatus('Loading video...');
+                    videoRef.current?.play()
+                        .then(() => {
+                            console.log("Video playing successfully");
+                            setCameraStatus('Active');
+                        })
+                        .catch((playError) => {
+                            console.error("Video play error:", playError);
+                            setCameraStatus('Play failed');
+                        });
+                };
+                
+                // Add event listeners for debugging
+                videoRef.current.oncanplay = () => {
+                    console.log("Video can play");
+                    setCameraStatus('Ready to play');
+                };
+                videoRef.current.onplay = () => {
+                    console.log("Video started playing");
+                    setCameraStatus('Playing');
+                };
+                videoRef.current.onerror = (e) => {
+                    console.error("Video error:", e);
+                    setCameraStatus('Video error');
+                };
+                videoRef.current.onloadstart = () => setCameraStatus('Loading...');
+                videoRef.current.onwaiting = () => setCameraStatus('Buffering...');
             }
+            
             streamRef.current = stream;
             setIsCameraOpen(true);
         } catch (err) {
             console.error("Error accessing camera:", err);
-            setError("Could not access camera. Please allow permissions.");
+            setCameraStatus('Failed');
+            setError(`Could not access camera: ${err instanceof Error ? err.message : 'Unknown error'}. Please allow camera permissions and use HTTPS.`);
         }
     };
 
@@ -55,6 +126,7 @@ export default function TexPage() {
             streamRef.current = null;
         }
         setIsCameraOpen(false);
+        setCameraStatus('Ready');
     };
 
     const captureImage = async () => {
@@ -221,6 +293,11 @@ export default function TexPage() {
                     <p className="text-gray-400">
                         Type LaTeX math expressions or draw them by hand to see them rendered in real-time.
                     </p>
+                    {typeof window !== 'undefined' && !window.location.protocol.startsWith('https') && (
+                        <div className="mt-2 p-3 bg-yellow-900/50 border border-yellow-500/30 rounded-lg text-yellow-200 text-sm">
+                            <strong>Note:</strong> Camera access requires HTTPS. Run <code className="bg-yellow-800/50 px-1 rounded">npm run dev:https</code> for camera functionality.
+                        </div>
+                    )}
                 </header>
 
                 {/* Camera Section */}
@@ -250,21 +327,67 @@ export default function TexPage() {
                     </div>
 
                     {isCameraOpen && (
-                        <div className="relative w-full max-w-md mx-auto aspect-video bg-black rounded-lg overflow-hidden mb-4">
-                            <video
-                                ref={videoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="w-full h-full object-cover"
-                            />
-                            <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                        <div className="space-y-4">
+                            <div className="relative w-full max-w-md mx-auto aspect-video bg-gray-900 rounded-lg overflow-hidden">
+                                <video
+                                    ref={videoRef}
+                                    autoPlay
+                                    playsInline
+                                    muted
+                                    className="w-full h-full object-cover"
+                                    onLoadedMetadata={() => {
+                                        console.log("Video metadata loaded in JSX");
+                                        if (videoRef.current) {
+                                            videoRef.current.play().catch(console.error);
+                                        }
+                                    }}
+                                />
+                                <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                                    <button
+                                        onClick={captureImage}
+                                        className="w-16 h-16 bg-white rounded-full border-4 border-gray-300 shadow-lg hover:bg-gray-100 transition-transform active:scale-95 flex items-center justify-center"
+                                        aria-label="Capture"
+                                    >
+                                        <div className="w-12 h-12 bg-red-500 rounded-full"></div>
+                                    </button>
+                                </div>
+                                {/* Status indicator */}
+                                <div className="absolute top-2 right-2 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
+                                    {cameraStatus}
+                                </div>
+                            </div>
+                            <div className="text-center space-y-2">
+                                <p className="text-sm text-gray-400">
+                                    If the camera appears black, check browser permissions and use HTTPS
+                                </p>
                                 <button
-                                    onClick={captureImage}
-                                    className="w-16 h-16 bg-white rounded-full border-4 border-gray-300 shadow-lg hover:bg-gray-100 transition-transform active:scale-95 flex items-center justify-center"
-                                    aria-label="Capture"
+                                    onClick={async () => {
+                                        console.log('=== Camera Debug Info ===');
+                                        console.log('Protocol:', window.location.protocol);
+                                        console.log('User Agent:', navigator.userAgent);
+                                        console.log('MediaDevices available:', !!navigator.mediaDevices);
+                                        console.log('getUserMedia available:', !!navigator.mediaDevices?.getUserMedia);
+                                        
+                                        try {
+                                            const devices = await navigator.mediaDevices.enumerateDevices();
+                                            console.log('Available devices:', devices.filter(d => d.kind === 'videoinput'));
+                                        } catch (e) {
+                                            console.error('Cannot enumerate devices:', e);
+                                        }
+                                        
+                                        if (videoRef.current) {
+                                            console.log('Video element state:', {
+                                                readyState: videoRef.current.readyState,
+                                                videoWidth: videoRef.current.videoWidth,
+                                                videoHeight: videoRef.current.videoHeight,
+                                                paused: videoRef.current.paused,
+                                                srcObject: !!videoRef.current.srcObject
+                                            });
+                                        }
+                                    }}
+                                    className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
                                 >
-                                    <div className="w-12 h-12 bg-red-500 rounded-full"></div>
+                                    Debug Camera (Check Console)
                                 </button>
                             </div>
                         </div>
