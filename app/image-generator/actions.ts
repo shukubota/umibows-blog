@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ImageGenerationResponse } from './types';
 
 export async function generateImage(
-  imageData: string, // Base64
+  imageDataArray: string[], // Base64 array
   prompt: string
 ): Promise<ImageGenerationResponse> {
   const startTime = Date.now();
@@ -21,23 +21,21 @@ export async function generateImage(
       model: "gemini-3-pro-image-preview",
     });
 
-    const imageParts = [
-      {
-        inlineData: {
-          data: imageData,
-          mimeType: "image/png"
-        }
+    const imageParts = imageDataArray.map(imageData => ({
+      inlineData: {
+        data: imageData,
+        mimeType: "image/png"
       }
-    ];
+    }));
 
     console.log('Sending request to Gemini API...');
     const response = await model.generateContent({
       contents: [{
         role: 'user',
         parts: [
-          { text: `Based on the uploaded image, ${prompt}
+          { text: `Based on the uploaded ${imageDataArray.length > 1 ? 'images' : 'image'}, ${prompt}
 
-IMPORTANT: You must generate and return an actual image file, not a text description. Please create a new image that fulfills this request.` },
+IMPORTANT: You must generate and return an actual image file, not a text description. Please create a new image that fulfills this request.${imageDataArray.length > 1 ? ' Use all the provided images as reference.' : ''}` },
           ...imageParts
         ]
       }],

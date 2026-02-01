@@ -3,34 +3,58 @@
 import { useState, useCallback, useRef } from 'react';
 
 interface ImageUploaderProps {
-  onImageUpload: (file: File, preview: string) => void;
+  onImageUpload: (files: File[], previews: string[]) => void;
   disabled?: boolean;
 }
 
 export default function ImageUploader({ onImageUpload, disabled = false }: ImageUploaderProps) {
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('画像ファイルを選択してください');
-      return;
+  const handleFiles = useCallback((newFiles: File[]) => {
+    const validFiles: File[] = [];
+    const validPreviews: string[] = [];
+
+    for (const file of newFiles) {
+      if (!file.type.startsWith('image/')) {
+        alert(`${file.name} は画像ファイルではありません`);
+        continue;
+      }
+
+      if (file.size > 10 * 1024 * 1024) { // 10MB
+        alert(`${file.name} のファイルサイズが10MBを超えています`);
+        continue;
+      }
+
+      validFiles.push(file);
     }
 
-    if (file.size > 10 * 1024 * 1024) { // 10MB
-      alert('ファイルサイズが10MBを超えています');
-      return;
-    }
+    if (validFiles.length === 0) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataURL = reader.result as string;
-      setPreview(dataURL);
-      onImageUpload(file, dataURL);
-    };
-    reader.readAsDataURL(file);
-  }, [onImageUpload]);
+    // Process all valid files
+    let processedCount = 0;
+    const tempPreviews: string[] = [];
+
+    validFiles.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataURL = reader.result as string;
+        tempPreviews[index] = dataURL;
+        processedCount++;
+
+        if (processedCount === validFiles.length) {
+          const allFiles = [...files, ...validFiles];
+          const allPreviews = [...previews, ...tempPreviews];
+          setFiles(allFiles);
+          setPreviews(allPreviews);
+          onImageUpload(allFiles, allPreviews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }, [onImageUpload, files, previews]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -38,11 +62,11 @@ export default function ImageUploader({ onImageUpload, disabled = false }: Image
 
     if (disabled) return;
 
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      handleFile(files[0]);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      handleFiles(droppedFiles);
     }
-  }, [handleFile, disabled]);
+  }, [handleFiles, disabled]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -57,11 +81,11 @@ export default function ImageUploader({ onImageUpload, disabled = false }: Image
   }, []);
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFile(files[0]);
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      handleFiles(Array.from(selectedFiles));
     }
-  }, [handleFile]);
+  }, [handleFiles]);
 
   const handleClick = useCallback(() => {
     if (!disabled && fileInputRef.current) {
@@ -90,34 +114,44 @@ export default function ImageUploader({ onImageUpload, disabled = false }: Image
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           onChange={handleFileInput}
           className="hidden"
           disabled={disabled}
         />
         
-        {preview ? (
+        {previews.length > 0 ? (
           <div className="space-y-4">
-            <div className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={preview} 
-                alt="Preview" 
-                className="max-w-full max-h-64 mx-auto rounded-lg shadow-md"
-              />
-              {!disabled && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-20 transition-all rounded-lg">
-                  <div className="text-white opacity-0 hover:opacity-100 transition-opacity">
-                    <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-sm mt-2">変更</p>
-                  </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {previews.map((preview, index) => (
+                <div key={index} className="relative group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src={preview} 
+                    alt={`Preview ${index + 1}`} 
+                    className="w-full h-32 object-cover rounded-lg shadow-md"
+                  />
+                  {!disabled && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newFiles = files.filter((_, i) => i !== index);
+                        const newPreviews = previews.filter((_, i) => i !== index);
+                        setFiles(newFiles);
+                        setPreviews(newPreviews);
+                        onImageUpload(newFiles, newPreviews);
+                      }}
+                      className="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
             {!disabled && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                クリックまたはドラッグで画像を変更
+              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                {previews.length}枚の画像を選択中 - クリックまたはドラッグで追加
               </p>
             )}
           </div>
@@ -133,30 +167,32 @@ export default function ImageUploader({ onImageUpload, disabled = false }: Image
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 {disabled 
                   ? '画像生成中...' 
-                  : 'ドラッグ&ドロップまたはクリックして選択'
+                  : 'ドラッグ&ドロップまたはクリックして選択（複数選択可）'
                 }
               </p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                PNG, JPG, GIF対応 (最大10MB)
+                PNG, JPG, GIF対応 (最大10MB/枚)
               </p>
             </div>
           </div>
         )}
       </div>
       
-      {preview && !disabled && (
+      {previews.length > 0 && !disabled && (
         <div className="flex justify-center">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setPreview(null);
+              setFiles([]);
+              setPreviews([]);
+              onImageUpload([], []);
               if (fileInputRef.current) {
                 fileInputRef.current.value = '';
               }
             }}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
-            画像をクリア
+            すべての画像をクリア
           </button>
         </div>
       )}

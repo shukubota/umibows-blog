@@ -8,20 +8,20 @@ import { generateImage } from './actions';
 import { ImageGenerationResponse } from './types';
 
 export default function ImageGeneratorPage() {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadPreviews, setUploadPreviews] = useState<string[]>([]);
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<ImageGenerationResponse | null>(null);
 
-  const handleImageUpload = (file: File, preview: string) => {
-    setUploadedFile(file);
-    setUploadPreview(preview);
+  const handleImageUpload = (files: File[], previews: string[]) => {
+    setUploadedFiles(files);
+    setUploadPreviews(previews);
     setResult(null); // Clear previous results
   };
 
   const handleGenerate = async () => {
-    if (!uploadedFile || !prompt.trim()) {
+    if (uploadedFiles.length === 0 || !prompt.trim()) {
       alert('画像とプロンプトの両方を入力してください');
       return;
     }
@@ -30,40 +30,52 @@ export default function ImageGeneratorPage() {
     setResult(null);
 
     try {
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
+      // Convert all files to base64
+      const base64DataArray: string[] = [];
+      let processedCount = 0;
+
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const file = uploadedFiles[i];
+        const reader = new FileReader();
+        
+        reader.onload = async () => {
           const base64 = reader.result as string;
           const base64Data = base64.split(',')[1]; // Remove data URL prefix
-          
-          console.log('Starting image generation...');
-          const response = await generateImage(base64Data, prompt);
-          console.log('Generation response:', response);
-          
-          setResult(response);
-        } catch (error) {
-          console.error('Generation error:', error);
+          base64DataArray[i] = base64Data;
+          processedCount++;
+
+          // When all files are processed, call the API
+          if (processedCount === uploadedFiles.length) {
+            try {
+              console.log(`Starting image generation with ${uploadedFiles.length} images...`);
+              const response = await generateImage(base64DataArray, prompt);
+              console.log('Generation response:', response);
+              
+              setResult(response);
+            } catch (error) {
+              console.error('Generation error:', error);
+              setResult({
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
+                latency: 0
+              });
+            } finally {
+              setIsGenerating(false);
+            }
+          }
+        };
+        
+        reader.onerror = () => {
+          setIsGenerating(false);
           setResult({
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred',
+            error: `ファイル ${file.name} の読み込みに失敗しました`,
             latency: 0
           });
-        } finally {
-          setIsGenerating(false);
-        }
-      };
-      
-      reader.onerror = () => {
-        setIsGenerating(false);
-        setResult({
-          success: false,
-          error: 'ファイルの読み込みに失敗しました',
-          latency: 0
-        });
-      };
-      
-      reader.readAsDataURL(uploadedFile);
+        };
+        
+        reader.readAsDataURL(file);
+      }
     } catch (error) {
       console.error('File reading error:', error);
       setIsGenerating(false);
@@ -75,11 +87,11 @@ export default function ImageGeneratorPage() {
     }
   };
 
-  const canGenerate = Boolean(uploadedFile && prompt.trim() && !isGenerating);
+  const canGenerate = Boolean(uploadedFiles.length > 0 && prompt.trim() && !isGenerating);
   
   // デバッグ用ログ
   console.log('Debug - canGenerate:', {
-    uploadedFile: !!uploadedFile,
+    uploadedFiles: uploadedFiles.length,
     prompt: prompt.trim(),
     isGenerating,
     canGenerate
@@ -153,7 +165,7 @@ export default function ImageGeneratorPage() {
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-xs">
               <h3 className="font-medium text-yellow-800 mb-2">デバッグ情報</h3>
               <div className="space-y-1 text-yellow-700">
-                <div>画像アップロード済み: {uploadedFile ? '✅' : '❌'}</div>
+                <div>画像アップロード済み: {uploadedFiles.length > 0 ? '✅' : '❌'} ({uploadedFiles.length}枚)</div>
                 <div>プロンプト入力済み: {prompt.trim() ? '✅' : '❌'} (長さ: {prompt.length})</div>
                 <div>生成中: {isGenerating ? '✅' : '❌'}</div>
                 <div>ボタン有効: {canGenerate ? '✅' : '❌'}</div>
@@ -167,7 +179,7 @@ export default function ImageGeneratorPage() {
                 <ol className="text-sm text-blue-700 space-y-2">
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-blue-600">1.</span>
-                    <span>変換・生成したい画像をアップロード</span>
+                    <span>変換・生成したい画像をアップロード（複数選択可）</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-blue-600">2.</span>
