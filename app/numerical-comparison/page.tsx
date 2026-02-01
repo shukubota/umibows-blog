@@ -196,7 +196,7 @@ export default function NumericalComparisonPage() {
         return () => {
             cancelAnimationFrame(animationFrameId);
         };
-    }, [isPlaying, dt]);
+    }, [isPlaying, dt, omega]);
 
     const handleReset = () => {
         stateRef.current = {
@@ -214,7 +214,7 @@ export default function NumericalComparisonPage() {
             <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center">
                 <h1 className="text-3xl font-bold mb-2 text-gray-800 dark:text-gray-100">Numerical Integration Comparison</h1>
                 <p className="mb-6 text-gray-600 dark:text-gray-400">
-                    Comparing Euler's Method, Runge-Kutta 4 (RK4), and Analytical Solution for a Harmonic Oscillator.
+                    Comparing Euler&apos;s Method, Runge-Kutta 4 (RK4), and Analytical Solution for a Harmonic Oscillator.
                     Notice how Euler diverges (adds energy) over time, while RK4 stays accurate.
                 </p>
 
