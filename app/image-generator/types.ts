@@ -1,5 +1,5 @@
 export interface ImageGenerationRequest {
-  image: File;
+  images: File[];
   prompt: string;
   model?: string;
 }
@@ -15,7 +15,7 @@ export interface ImageGenerationResponse {
 export interface GenerationHistory {
   id: string;
   timestamp: Date;
-  originalImage: string; // Base64
+  originalImages: string[]; // Base64 array
   prompt: string;
   result: ImageGenerationResponse;
 }
