@@ -1,0 +1,7 @@
+# Google AI API Key
+export GOOGLE_AI_API_KEY=your_google_ai_api_key_here
+
+# Basic Authentication (set to 'true' to enable)
+export BASIC_AUTH_ENABLED=false
+export BASIC_AUTH_USER=admin
+export BASIC_AUTH_PASSWORD=your_secure_password_here
