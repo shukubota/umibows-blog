@@ -91,6 +91,7 @@ export default function GeneratedImage({ result, isLoading }: GeneratedImageProp
       {result.imageData && (
         <div className="space-y-4">
           <div className="relative group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src={`data:image/png;base64,${result.imageData}`}
               alt="Generated Image"

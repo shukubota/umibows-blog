@@ -75,7 +75,7 @@ export default function ImageGeneratorPage() {
     }
   };
 
-  const canGenerate = uploadedFile && prompt.trim() && !isGenerating;
+  const canGenerate = Boolean(uploadedFile && prompt.trim() && !isGenerating);
   
   // デバッグ用ログ
   console.log('Debug - canGenerate:', {

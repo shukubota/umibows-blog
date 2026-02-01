@@ -98,6 +98,7 @@ export default function ImageUploader({ onImageUpload, disabled = false }: Image
         {preview ? (
           <div className="space-y-4">
             <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={preview} 
                 alt="Preview" 

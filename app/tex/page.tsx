@@ -462,7 +462,7 @@ export default function TexPage() {
                     </div>
                     
                     <p className="text-sm text-gray-400 text-center">
-                        Draw mathematical expressions above and click "Convert to TeX" to generate LaTeX code
+                        Draw mathematical expressions above and click &quot;Convert to TeX&quot; to generate LaTeX code
                     </p>
                 </section>
 
