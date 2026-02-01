@@ -2,10 +2,11 @@ import Link from "next/link";
 
 export default function Home() {
   const blogs = [
+    { id: "image-generator", title: "AI Image Generator", path: "/image-generator" },
+    { id: "tex", title: "TeX Previewer", path: "/tex" },
     { id: "double-pendulum", title: "Double Pendulum Simulation", path: "/double-pendulum" },
     { id: "numerical-comparison", title: "Numerical Integration Comparison (Euler vs RK4)", path: "/numerical-comparison" },
     { id: "lorenz", title: "Lorenz Attractor Simulation", path: "/lorenz" },
-    { id: "tex", title: "TeX Previewer", path: "/tex" },
     { id: "igo", title: "Igo (Go Game)", path: "/igo" },
     { id: "weather-map", title: "Weather Map (Windy)", path: "/weather-map" },
     { id: 2, title: "Second Blog Post", path: "/blog/2" },
