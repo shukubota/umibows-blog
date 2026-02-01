@@ -17,7 +17,8 @@ export async function generateImage(
     console.log('Starting image generation with Gemini API...');
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-image",
+      // model: "gemini-2.5-flash-image",
+      model: "gemini-3-pro-image-preview",
     });
 
     const imageParts = [
@@ -30,7 +31,23 @@ export async function generateImage(
     ];
 
     console.log('Sending request to Gemini API...');
-    const response = await model.generateContent([prompt, ...imageParts]);
+    const response = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: `Based on the uploaded image, ${prompt}
+
+IMPORTANT: You must generate and return an actual image file, not a text description. Please create a new image that fulfills this request.` },
+          ...imageParts
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.8,
+        topK: 40,
+        maxOutputTokens: 8192,
+      }
+    });
     const latency = Date.now() - startTime;
     console.log(`API response received in ${latency}ms`);
 
@@ -50,13 +67,15 @@ export async function generateImage(
     let generatedImageData: string | undefined;
     let textResponse: string | undefined;
 
+    console.log('Response parts count:', parts.length);
     for (const part of parts) {
+      console.log('Part type:', Object.keys(part));
       if (part.inlineData?.data) {
-        console.log('Image data received');
+        console.log('Image data received, size:', part.inlineData.data.length);
         generatedImageData = part.inlineData.data;
       }
       if (part.text) {
-        console.log('Text response received');
+        console.log('Text response received:', part.text.substring(0, 100) + '...');
         textResponse = part.text;
       }
     }
