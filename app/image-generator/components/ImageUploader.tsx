@@ -13,7 +13,54 @@ export default function ImageUploader({ onImageUpload, disabled = false }: Image
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFiles = useCallback((newFiles: File[]) => {
+  const compressImage = useCallback((file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions (max 1024px on any side)
+        let { width, height } = img;
+        const maxSize = 1024;
+        
+        if (width > maxSize || height > maxSize) {
+          if (width > height) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          } else {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          0.8 // 80% quality
+        );
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  }, []);
+
+  const handleFiles = useCallback(async (newFiles: File[]) => {
     const validFiles: File[] = [];
     const validPreviews: string[] = [];
 
@@ -33,19 +80,26 @@ export default function ImageUploader({ onImageUpload, disabled = false }: Image
 
     if (validFiles.length === 0) return;
 
-    // Process all valid files
+    // Compress all valid files
+    const compressedFiles: File[] = [];
+    for (const file of validFiles) {
+      const compressed = await compressImage(file);
+      compressedFiles.push(compressed);
+    }
+
+    // Process all compressed files
     let processedCount = 0;
     const tempPreviews: string[] = [];
 
-    validFiles.forEach((file, index) => {
+    compressedFiles.forEach((file, index) => {
       const reader = new FileReader();
       reader.onload = () => {
         const dataURL = reader.result as string;
         tempPreviews[index] = dataURL;
         processedCount++;
 
-        if (processedCount === validFiles.length) {
-          const allFiles = [...files, ...validFiles];
+        if (processedCount === compressedFiles.length) {
+          const allFiles = [...files, ...compressedFiles];
           const allPreviews = [...previews, ...tempPreviews];
           setFiles(allFiles);
           setPreviews(allPreviews);
@@ -54,7 +108,7 @@ export default function ImageUploader({ onImageUpload, disabled = false }: Image
       };
       reader.readAsDataURL(file);
     });
-  }, [onImageUpload, files, previews]);
+  }, [onImageUpload, files, previews, compressImage]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -171,7 +225,7 @@ export default function ImageUploader({ onImageUpload, disabled = false }: Image
                 }
               </p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                PNG, JPG, GIF対応 (最大10MB/枚)
+                PNG, JPG, GIF対応 (最大10MB/枚・自動圧縮)
               </p>
             </div>
           </div>
