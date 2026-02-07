@@ -4,6 +4,7 @@ export default function Home() {
   const blogs = [
     { id: "image-generator", title: "AI Image Generator", path: "/image-generator" },
     { id: "tex", title: "TeX Previewer", path: "/tex" },
+    { id: "langtons-ant", title: "Langton's Ant Simulation", path: "/langtons-ant" },
     { id: "double-pendulum", title: "Double Pendulum Simulation", path: "/double-pendulum" },
     { id: "numerical-comparison", title: "Numerical Integration Comparison (Euler vs RK4)", path: "/numerical-comparison" },
     { id: "lorenz", title: "Lorenz Attractor Simulation", path: "/lorenz" },
