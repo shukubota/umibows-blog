@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import Stone from './components/Stone';
@@ -24,9 +24,52 @@ const Igo = () => {
     Array(9).fill(null).map(() => Array(9).fill(null))
   );
 
+  const updateTerritories = useCallback(() => {
+    const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
+    let blackTerritory = 0;
+    let whiteTerritory = 0;
+
+    const checkTerritory = (r: number, c: number, color: 'black' | 'white'): number => {
+      if (r < 0 || r >= 9 || c < 0 || c >= 9) return 0;
+      if (boardState[r][c] !== null || visited[r][c]) return 0;
+      visited[r][c] = true;
+
+      let territory = 1;
+      if ((r > 0 && boardState[r - 1][c] !== color && boardState[r - 1][c] !== null) ||
+        (r < 8 && boardState[r + 1][c] !== color && boardState[r + 1][c] !== null) ||
+        (c > 0 && boardState[r][c - 1] !== color && boardState[r][c - 1] !== null) ||
+        (c < 8 && boardState[r][c + 1] !== color && boardState[r][c + 1] !== null)) {
+        return 0; // 周りに違う色がある場合は0
+      }
+      territory += checkTerritory(r - 1, c, color);
+      territory += checkTerritory(r + 1, c, color);
+      territory += checkTerritory(r, c - 1, color);
+      territory += checkTerritory(r, c + 1, color);
+
+      return territory;
+    };
+
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (!visited[r][c] && boardState[r][c] === null) {
+          if ((r > 0 && boardState[r - 1][c] === 'black') || (r < 8 && boardState[r + 1][c] === 'black') ||
+            (c > 0 && boardState[r][c - 1] === 'black') || (c < 8 && boardState[r][c + 1] === 'black')) {
+            blackTerritory += checkTerritory(r, c, 'black');
+          } else if ((r > 0 && boardState[r - 1][c] === 'white') || (r < 8 && boardState[r + 1][c] === 'white') ||
+            (c > 0 && boardState[r][c - 1] === 'white') || (c < 8 && boardState[r][c + 1] === 'white')) {
+            whiteTerritory += checkTerritory(r, c, 'white');
+          }
+        }
+      }
+    }
+
+    setBlackTerritory(blackTerritory);
+    setWhiteTerritory(whiteTerritory);
+  }, [boardState]);
+
   useEffect(() => {
     updateTerritories();
-  }, [moves, boardState]);
+  }, [moves, boardState, updateTerritories]);
 
   const handleClick = (row: number, col: number) => {
     if (boardState[row - 1][col - 1] !== null) {
@@ -179,48 +222,6 @@ const Igo = () => {
     }
 
     return deadStones;
-  };
-  const updateTerritories = () => {
-    const visited: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
-    let blackTerritory = 0;
-    let whiteTerritory = 0;
-
-    const checkTerritory = (r: number, c: number, color: 'black' | 'white'): number => {
-      if (r < 0 || r >= 9 || c < 0 || c >= 9) return 0;
-      if (boardState[r][c] !== null || visited[r][c]) return 0;
-      visited[r][c] = true;
-
-      let territory = 1;
-      if ((r > 0 && boardState[r - 1][c] !== color && boardState[r - 1][c] !== null) ||
-        (r < 8 && boardState[r + 1][c] !== color && boardState[r + 1][c] !== null) ||
-        (c > 0 && boardState[r][c - 1] !== color && boardState[r][c - 1] !== null) ||
-        (c < 8 && boardState[r][c + 1] !== color && boardState[r][c + 1] !== null)) {
-        return 0; // 周りに違う色がある場合は0
-      }
-      territory += checkTerritory(r - 1, c, color);
-      territory += checkTerritory(r + 1, c, color);
-      territory += checkTerritory(r, c - 1, color);
-      territory += checkTerritory(r, c + 1, color);
-
-      return territory;
-    };
-
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        if (!visited[r][c] && boardState[r][c] === null) {
-          if ((r > 0 && boardState[r - 1][c] === 'black') || (r < 8 && boardState[r + 1][c] === 'black') ||
-            (c > 0 && boardState[r][c - 1] === 'black') || (c < 8 && boardState[r][c + 1] === 'black')) {
-            blackTerritory += checkTerritory(r, c, 'black');
-          } else if ((r > 0 && boardState[r - 1][c] === 'white') || (r < 8 && boardState[r + 1][c] === 'white') ||
-            (c > 0 && boardState[r][c - 1] === 'white') || (c < 8 && boardState[r][c + 1] === 'white')) {
-            whiteTerritory += checkTerritory(r, c, 'white');
-          }
-        }
-      }
-    }
-
-    setBlackTerritory(blackTerritory);
-    setWhiteTerritory(whiteTerritory);
   };
 
   const clearBoard = () => {
