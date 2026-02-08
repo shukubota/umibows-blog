@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 
 const pages = [
   "https://via.placeholder.com/200x300?text=Page+1", // Placeholder image for page 1
@@ -30,15 +31,19 @@ const BookViewer = () => {
         Previous
       </button>
       <div className="spread">
-        <img
+        <Image
           src={pages[currentSpread * 2]}
           alt={`Page ${currentSpread * 2 + 1}`}
           className="page"
+          width={200}
+          height={300}
         />
-        <img
+        <Image
           src={pages[currentSpread * 2 + 1]}
           alt={`Page ${currentSpread * 2 + 2}`}
           className="page"
+          width={200}
+          height={300}
         />
       </div>
       <button

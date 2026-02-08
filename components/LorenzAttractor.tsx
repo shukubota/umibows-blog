@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 interface Point {
     x: number;
@@ -31,7 +31,7 @@ const LorenzAttractor: React.FC = () => {
         }
     };
 
-    const rk4 = (p: Point, dt: number): Point => {
+    const rk4 = useCallback((p: Point, dt: number): Point => {
         const f = (p: Point): Point => ({
             x: sigma * (p.y - p.x),
             y: p.x * (rho - p.z) - p.y,
@@ -48,9 +48,9 @@ const LorenzAttractor: React.FC = () => {
             y: p.y + (k1.y + 2 * k2.y + 2 * k3.y + k4.y) * dt / 6,
             z: p.z + (k1.z + 2 * k2.z + 2 * k3.z + k4.z) * dt / 6
         };
-    };
+    }, [sigma, rho, beta]);
 
-    const draw = () => {
+    const draw = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
@@ -96,7 +96,7 @@ const LorenzAttractor: React.FC = () => {
         ctx.stroke();
 
         requestRef.current = requestAnimationFrame(draw);
-    };
+    }, [speed, rk4]);
 
     useEffect(() => {
         if (isPlaying) {
@@ -107,7 +107,7 @@ const LorenzAttractor: React.FC = () => {
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
-    }, [isPlaying, sigma, rho, beta, speed]);
+    }, [isPlaying, sigma, rho, beta, speed, draw]);
 
     useEffect(() => {
         const canvas = canvasRef.current;

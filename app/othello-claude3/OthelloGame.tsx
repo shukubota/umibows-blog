@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useOthello } from '../../hooks/othello-claude3/use-othello';
 
 const OthelloGame: React.FC = () => {
@@ -17,6 +17,18 @@ const OthelloGame: React.FC = () => {
     checkAndHandlePass,
   } = useOthello();
 
+  const getAvailableMoves = useCallback((board: string[][], player: 'black' | 'white') => {
+    const moves: [number, number][] = [];
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+        if (isValidMove(board, i, j, player)) {
+          moves.push([i, j]);
+        }
+      }
+    }
+    return moves;
+  }, []);
+
   useEffect(() => {
     if (currentPlayer === 'white' && !gameOver) {
       setTimeout(() => {
@@ -29,19 +41,7 @@ const OthelloGame: React.FC = () => {
         }
       }, 1000);
     }
-  }, [currentPlayer, gameOver, board]);
-
-  const getAvailableMoves = (board: string[][], player: 'black' | 'white') => {
-    const moves: [number, number][] = [];
-    for (let i = 0; i < 4; i++) {
-      for (let j = 0; j < 4; j++) {
-        if (isValidMove(board, i, j, player)) {
-          moves.push([i, j]);
-        }
-      }
-    }
-    return moves;
-  };
+  }, [currentPlayer, gameOver, board, checkAndHandlePass, getAvailableMoves, placeDisc]);
 
   const isValidMove = (board: string[][], row: number, col: number, player: 'black' | 'white') => {
     if (board[row][col] !== '') return false;
