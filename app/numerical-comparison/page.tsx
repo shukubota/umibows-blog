@@ -259,6 +259,56 @@ export default function NumericalComparisonPage() {
                     </div>
                 </div>
 
+                {/* Equations Section */}
+                <div className="w-full mb-6 p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Methods &amp; Equations</h2>
+
+                    <div className="space-y-4">
+                        {/* System Equations */}
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg">
+                            <h3 className="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-200">System: Simple Harmonic Oscillator</h3>
+                            <div className="font-mono text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                                <div>dx/dt = v</div>
+                                <div>dv/dt = -(k/m) × x</div>
+                                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">where k = {k}, m = {m}, ω = √(k/m) = {omega.toFixed(3)}</div>
+                            </div>
+                        </div>
+
+                        {/* Euler Method */}
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-red-500">
+                            <h3 className="text-lg font-semibold mb-2 text-red-600 dark:text-red-400">Euler Method</h3>
+                            <div className="font-mono text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                                <div>x<sub>n+1</sub> = x<sub>n</sub> + v<sub>n</sub> × dt</div>
+                                <div>v<sub>n+1</sub> = v<sub>n</sub> + a<sub>n</sub> × dt</div>
+                                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">where a<sub>n</sub> = -(k/m) × x<sub>n</sub></div>
+                            </div>
+                        </div>
+
+                        {/* RK4 Method */}
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
+                            <h3 className="text-lg font-semibold mb-2 text-blue-600 dark:text-blue-400">Runge-Kutta 4 (RK4) Method</h3>
+                            <div className="font-mono text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                                <div>k₁ = f(x<sub>n</sub>, v<sub>n</sub>)</div>
+                                <div>k₂ = f(x<sub>n</sub> + k₁.dx × dt/2, v<sub>n</sub> + k₁.dv × dt/2)</div>
+                                <div>k₃ = f(x<sub>n</sub> + k₂.dx × dt/2, v<sub>n</sub> + k₂.dv × dt/2)</div>
+                                <div>k₄ = f(x<sub>n</sub> + k₃.dx × dt, v<sub>n</sub> + k₃.dv × dt)</div>
+                                <div className="mt-2">x<sub>n+1</sub> = x<sub>n</sub> + (k₁.dx + 2k₂.dx + 2k₃.dx + k₄.dx) × dt/6</div>
+                                <div>v<sub>n+1</sub> = v<sub>n</sub> + (k₁.dv + 2k₂.dv + 2k₃.dv + k₄.dv) × dt/6</div>
+                            </div>
+                        </div>
+
+                        {/* Analytical Solution */}
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-green-600">
+                            <h3 className="text-lg font-semibold mb-2 text-green-600 dark:text-green-400">Analytical Solution (Exact)</h3>
+                            <div className="font-mono text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                                <div>x(t) = x₀ × cos(ωt) + (v₀/ω) × sin(ωt)</div>
+                                <div>v(t) = -x₀ × ω × sin(ωt) + v₀ × cos(ωt)</div>
+                                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">where x₀ = {x0}, v₀ = {v0}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <Link href="/" className="text-blue-500 hover:underline">
                     &larr; Back to Home
                 </Link>
