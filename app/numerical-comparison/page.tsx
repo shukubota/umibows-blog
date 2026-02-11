@@ -269,43 +269,43 @@ export default function NumericalComparisonPage() {
                         {/* System Equations */}
                         <div className="p-4 bg-white dark:bg-gray-800 rounded-lg">
                             <h3 className="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">System: Simple Harmonic Oscillator</h3>
-                            <div className="space-y-2 text-gray-800 dark:text-gray-200">
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('\\frac{dx}{dt} = v', { displayMode: false }) }} />
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('\\frac{dv}{dt} = -\\frac{k}{m} x', { displayMode: false }) }} />
-                                <div className="mt-3 text-sm text-gray-500 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: katex.renderToString(`\\text{where } k = ${k}, \\, m = ${m}, \\, \\omega = \\sqrt{k/m} = ${omega.toFixed(3)}`, { displayMode: false }) }} />
+                            <div className="space-y-3 text-gray-800 dark:text-gray-200">
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('\\frac{dx}{dt} = v', { displayMode: true }) }} />
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('\\frac{dv}{dt} = -\\frac{k}{m} x', { displayMode: true }) }} />
+                                <div className="mt-3 text-sm text-gray-500 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: katex.renderToString(`\\text{where } k = ${k}, \\, m = ${m}, \\, \\omega = \\sqrt{\\frac{k}{m}} = ${omega.toFixed(3)}`, { displayMode: true }) }} />
                             </div>
                         </div>
 
                         {/* Euler Method */}
                         <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-red-500">
                             <h3 className="text-lg font-semibold mb-3 text-red-600 dark:text-red-400">Euler Method</h3>
-                            <div className="space-y-2 text-gray-800 dark:text-gray-200">
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('x_{n+1} = x_n + v_n \\cdot dt', { displayMode: false }) }} />
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('v_{n+1} = v_n + a_n \\cdot dt', { displayMode: false }) }} />
-                                <div className="mt-3 text-sm text-gray-500 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: katex.renderToString('\\text{where } a_n = -\\frac{k}{m} x_n', { displayMode: false }) }} />
+                            <div className="space-y-3 text-gray-800 dark:text-gray-200">
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('x_{n+1} = x_n + v_n \\cdot \\Delta t', { displayMode: true }) }} />
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('v_{n+1} = v_n + a_n \\cdot \\Delta t', { displayMode: true }) }} />
+                                <div className="mt-3 text-sm text-gray-500 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: katex.renderToString('\\text{where } a_n = -\\frac{k}{m} x_n', { displayMode: true }) }} />
                             </div>
                         </div>
 
                         {/* RK4 Method */}
                         <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
                             <h3 className="text-lg font-semibold mb-3 text-blue-600 dark:text-blue-400">Runge-Kutta 4 (RK4) Method</h3>
-                            <div className="space-y-2 text-gray-800 dark:text-gray-200">
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('k_1 = f(x_n, v_n)', { displayMode: false }) }} />
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('k_2 = f(x_n + k_1.dx \\cdot dt/2, \\, v_n + k_1.dv \\cdot dt/2)', { displayMode: false }) }} />
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('k_3 = f(x_n + k_2.dx \\cdot dt/2, \\, v_n + k_2.dv \\cdot dt/2)', { displayMode: false }) }} />
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('k_4 = f(x_n + k_3.dx \\cdot dt, \\, v_n + k_3.dv \\cdot dt)', { displayMode: false }) }} />
-                                <div className="mt-3" dangerouslySetInnerHTML={{ __html: katex.renderToString('x_{n+1} = x_n + \\frac{k_1.dx + 2k_2.dx + 2k_3.dx + k_4.dx}{6} \\cdot dt', { displayMode: false }) }} />
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('v_{n+1} = v_n + \\frac{k_1.dv + 2k_2.dv + 2k_3.dv + k_4.dv}{6} \\cdot dt', { displayMode: false }) }} />
+                            <div className="space-y-3 text-gray-800 dark:text-gray-200">
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('k_1 = f(x_n, v_n)', { displayMode: true }) }} />
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('k_2 = f\\left(x_n + k_1.dx \\cdot \\frac{\\Delta t}{2}, \\, v_n + k_1.dv \\cdot \\frac{\\Delta t}{2}\\right)', { displayMode: true }) }} />
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('k_3 = f\\left(x_n + k_2.dx \\cdot \\frac{\\Delta t}{2}, \\, v_n + k_2.dv \\cdot \\frac{\\Delta t}{2}\\right)', { displayMode: true }) }} />
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('k_4 = f(x_n + k_3.dx \\cdot \\Delta t, \\, v_n + k_3.dv \\cdot \\Delta t)', { displayMode: true }) }} />
+                                <div className="mt-3" dangerouslySetInnerHTML={{ __html: katex.renderToString('x_{n+1} = x_n + \\frac{k_1.dx + 2k_2.dx + 2k_3.dx + k_4.dx}{6} \\cdot \\Delta t', { displayMode: true }) }} />
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('v_{n+1} = v_n + \\frac{k_1.dv + 2k_2.dv + 2k_3.dv + k_4.dv}{6} \\cdot \\Delta t', { displayMode: true }) }} />
                             </div>
                         </div>
 
                         {/* Analytical Solution */}
                         <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border-l-4 border-green-600">
                             <h3 className="text-lg font-semibold mb-3 text-green-600 dark:text-green-400">Analytical Solution (Exact)</h3>
-                            <div className="space-y-2 text-gray-800 dark:text-gray-200">
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('x(t) = x_0 \\cos(\\omega t) + \\frac{v_0}{\\omega} \\sin(\\omega t)', { displayMode: false }) }} />
-                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('v(t) = -x_0 \\omega \\sin(\\omega t) + v_0 \\cos(\\omega t)', { displayMode: false }) }} />
-                                <div className="mt-3 text-sm text-gray-500 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: katex.renderToString(`\\text{where } x_0 = ${x0}, \\, v_0 = ${v0}`, { displayMode: false }) }} />
+                            <div className="space-y-3 text-gray-800 dark:text-gray-200">
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('x(t) = x_0 \\cos(\\omega t) + \\frac{v_0}{\\omega} \\sin(\\omega t)', { displayMode: true }) }} />
+                                <div dangerouslySetInnerHTML={{ __html: katex.renderToString('v(t) = -x_0 \\omega \\sin(\\omega t) + v_0 \\cos(\\omega t)', { displayMode: true }) }} />
+                                <div className="mt-3 text-sm text-gray-500 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: katex.renderToString(`\\text{where } x_0 = ${x0}, \\, v_0 = ${v0}`, { displayMode: true }) }} />
                             </div>
                         </div>
                     </div>
