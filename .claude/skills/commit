@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Quality Commit Skill Entry Point
+# This script serves as the main entry point for the quality-commit skill
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Parse command line arguments
+COMMIT_MESSAGE=""
+if [ $# -gt 0 ]; then
+    COMMIT_MESSAGE="$*"
+fi
+
+# Execute the quality commit process
+exec "$SCRIPT_DIR/quality-commit.sh" "$COMMIT_MESSAGE"
