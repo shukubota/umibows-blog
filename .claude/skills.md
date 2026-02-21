@@ -78,7 +78,7 @@
 
 ## Git Workflow Agent
 
-**Name**: `git-workflow-automator`  
+**Name**: `git-workflow-automator`
 **Description**: Automates git operations including staging, committing, and pushing changes with proper commit messages.
 
 **Skills**:
@@ -90,3 +90,29 @@
 - Repository state validation before commits
 
 **Usage**: Use when you need to commit and push changes, or when managing git workflows. Can be triggered with keywords like "commit", "push", "save changes".
+
+## Quality Commit Agent
+
+**Name**: `quality-commit`
+**Description**: Performs automated code quality checks (Prettier formatting, ESLint, and security scanning) before committing changes to ensure consistent code quality and security.
+
+**Skills**:
+
+- Pre-commit Prettier formatting validation and auto-fix
+- ESLint error checking and auto-fix where possible
+- Security scan for API keys, tokens, and sensitive data
+- Code quality gate enforcement
+- Automated staging of formatted files
+- Intelligent commit message generation based on changes
+- Rollback capability if quality checks fail
+
+**Security Checks**:
+
+- API keys and tokens detection
+- Password and secret scanning
+- Private key detection
+- Database connection strings
+- Environment variable exposure
+- Hardcoded credentials
+
+**Usage**: Use when committing code to automatically ensure formatting, linting standards, and security compliance. Can be triggered with "quality commit", "secure commit", "commit with checks", or similar phrases.
