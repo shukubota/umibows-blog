@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface MarkerProps {
   position: [number, number];
@@ -12,9 +12,9 @@ const Marker: React.FC<MarkerProps> = ({ position }) => {
       style={{
         top: `${row * 10}%`,
         left: `${col * 10}%`,
-        width: '8%',
-        height: '8%',
-        transform: 'translate(-50%, -50%)',
+        width: "8%",
+        height: "8%",
+        transform: "translate(-50%, -50%)",
         zIndex: 2, // Ensure marker is on top
       }}
     >

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import ImageUploader from './components/ImageUploader';
-import PromptInput from './components/PromptInput';
-import GeneratedImage from './components/GeneratedImage';
-import { generateImage } from './actions';
-import { ImageGenerationResponse } from './types';
+import { useState } from "react";
+import ImageUploader from "./components/ImageUploader";
+import PromptInput from "./components/PromptInput";
+import GeneratedImage from "./components/GeneratedImage";
+import { generateImage } from "./actions";
+import { ImageGenerationResponse } from "./types";
 
 export default function ImageGeneratorPage() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploadPreviews, setUploadPreviews] = useState<string[]>([]);
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<ImageGenerationResponse | null>(null);
 
@@ -22,7 +22,7 @@ export default function ImageGeneratorPage() {
 
   const handleGenerate = async () => {
     if (uploadedFiles.length === 0 || !prompt.trim()) {
-      alert('画像とプロンプトの両方を入力してください');
+      alert("画像とプロンプトの両方を入力してください");
       return;
     }
 
@@ -37,10 +37,10 @@ export default function ImageGeneratorPage() {
       for (let i = 0; i < uploadedFiles.length; i++) {
         const file = uploadedFiles[i];
         const reader = new FileReader();
-        
+
         reader.onload = async () => {
           const base64 = reader.result as string;
-          const base64Data = base64.split(',')[1]; // Remove data URL prefix
+          const base64Data = base64.split(",")[1]; // Remove data URL prefix
           base64DataArray[i] = base64Data;
           processedCount++;
 
@@ -49,52 +49,52 @@ export default function ImageGeneratorPage() {
             try {
               console.log(`Starting image generation with ${uploadedFiles.length} images...`);
               const response = await generateImage(base64DataArray, prompt);
-              console.log('Generation response:', response);
-              
+              console.log("Generation response:", response);
+
               setResult(response);
             } catch (error) {
-              console.error('Generation error:', error);
+              console.error("Generation error:", error);
               setResult({
                 success: false,
-                error: error instanceof Error ? error.message : 'Unknown error occurred',
-                latency: 0
+                error: error instanceof Error ? error.message : "Unknown error occurred",
+                latency: 0,
               });
             } finally {
               setIsGenerating(false);
             }
           }
         };
-        
+
         reader.onerror = () => {
           setIsGenerating(false);
           setResult({
             success: false,
             error: `ファイル ${file.name} の読み込みに失敗しました`,
-            latency: 0
+            latency: 0,
           });
         };
-        
+
         reader.readAsDataURL(file);
       }
     } catch (error) {
-      console.error('File reading error:', error);
+      console.error("File reading error:", error);
       setIsGenerating(false);
       setResult({
         success: false,
-        error: 'ファイルの処理に失敗しました',
-        latency: 0
+        error: "ファイルの処理に失敗しました",
+        latency: 0,
       });
     }
   };
 
   const canGenerate = Boolean(uploadedFiles.length > 0 && prompt.trim() && !isGenerating);
-  
+
   // デバッグ用ログ
-  console.log('Debug - canGenerate:', {
+  console.log("Debug - canGenerate:", {
     uploadedFiles: uploadedFiles.length,
     prompt: prompt.trim(),
     isGenerating,
-    canGenerate
+    canGenerate,
   });
 
   return (
@@ -103,12 +103,8 @@ export default function ImageGeneratorPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <header className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              AI Image Generator
-            </h1>
-            <p className="text-lg text-gray-600">
-              Google Gemini AIを使った画像生成・変換ツール
-            </p>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">AI Image Generator</h1>
+            <p className="text-lg text-gray-600">Google Gemini AIを使った画像生成・変換ツール</p>
           </header>
         </div>
       </div>
@@ -124,10 +120,7 @@ export default function ImageGeneratorPage() {
                 <span className="text-2xl">📷</span>
                 画像アップロード
               </h2>
-              <ImageUploader 
-                onImageUpload={handleImageUpload} 
-                disabled={isGenerating}
-              />
+              <ImageUploader onImageUpload={handleImageUpload} disabled={isGenerating} />
             </div>
 
             {/* Prompt Input */}
@@ -136,7 +129,7 @@ export default function ImageGeneratorPage() {
                 <span className="text-2xl">✏️</span>
                 プロンプト入力
               </h2>
-              <PromptInput 
+              <PromptInput
                 value={prompt}
                 onChange={setPrompt}
                 onSubmit={handleGenerate}
@@ -155,20 +148,22 @@ export default function ImageGeneratorPage() {
                 <span className="text-2xl">🎨</span>
                 生成結果
               </h2>
-              <GeneratedImage 
-                result={result}
-                isLoading={isGenerating}
-              />
+              <GeneratedImage result={result} isLoading={isGenerating} />
             </div>
 
             {/* Debug Panel */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-xs">
               <h3 className="font-medium text-yellow-800 mb-2">デバッグ情報</h3>
               <div className="space-y-1 text-yellow-700">
-                <div>画像アップロード済み: {uploadedFiles.length > 0 ? '✅' : '❌'} ({uploadedFiles.length}枚)</div>
-                <div>プロンプト入力済み: {prompt.trim() ? '✅' : '❌'} (長さ: {prompt.length})</div>
-                <div>生成中: {isGenerating ? '✅' : '❌'}</div>
-                <div>ボタン有効: {canGenerate ? '✅' : '❌'}</div>
+                <div>
+                  画像アップロード済み: {uploadedFiles.length > 0 ? "✅" : "❌"} (
+                  {uploadedFiles.length}枚)
+                </div>
+                <div>
+                  プロンプト入力済み: {prompt.trim() ? "✅" : "❌"} (長さ: {prompt.length})
+                </div>
+                <div>生成中: {isGenerating ? "✅" : "❌"}</div>
+                <div>ボタン有効: {canGenerate ? "✅" : "❌"}</div>
               </div>
             </div>
 
@@ -194,10 +189,10 @@ export default function ImageGeneratorPage() {
                     <span>結果をダウンロードまたはコピーして利用</span>
                   </li>
                 </ol>
-                
+
                 <div className="mt-4 p-3 bg-blue-100 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <span className="font-medium">💡 ヒント:</span> 
+                    <span className="font-medium">💡 ヒント:</span>
                     具体的で詳細なプロンプトほど、より期待に近い結果が得られます。
                   </p>
                 </div>

@@ -46,10 +46,7 @@ const BookViewer = () => {
           height={300}
         />
       </div>
-      <button
-        onClick={handleNext}
-        disabled={currentSpread === pages.length / 2 - 1}
-      >
+      <button onClick={handleNext} disabled={currentSpread === pages.length / 2 - 1}>
         Next
       </button>
       <style jsx>{`

@@ -1,11 +1,13 @@
 # Claude Code Configuration
 
 ## Project Overview
+
 Umibows Blog - A Next.js blog with interactive mathematical visualizations and educational content.
 
 ## Commands
 
 ### Development
+
 ```bash
 npm run dev        # Start development server (HTTP)
 npm run dev:https  # Start development server with HTTPS (required for camera access)
@@ -15,6 +17,7 @@ npm run lint       # Run ESLint
 ```
 
 ### Testing
+
 ```bash
 # No test framework configured yet
 ```
@@ -22,6 +25,7 @@ npm run lint       # Run ESLint
 ## Environment Setup
 
 Required environment variables:
+
 - `ANTHROPIC_API_KEY`: For handwriting recognition in TeX Previewer
 
 ## Project Structure
@@ -66,6 +70,7 @@ Required environment variables:
 ## Agent Skills
 
 This repository benefits from specialized Claude Code agents for:
+
 - Mathematical expression handling and LaTeX formatting
 - Interactive visualization development
 - Next.js/React component architecture

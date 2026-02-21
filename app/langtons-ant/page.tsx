@@ -28,33 +28,39 @@ const INITIAL_PATTERNS: InitialPattern[] = [
     name: "中央開始",
     description: "グリッドの中央から開始（標準）",
     getInitialState: (gridSize: number) => {
-      const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      const grid = Array(gridSize)
+        .fill(null)
+        .map(() => Array(gridSize).fill(false));
       return {
         grid,
-        ant: { x: Math.floor(gridSize / 2), y: Math.floor(gridSize / 2), direction: 0 }
+        ant: { x: Math.floor(gridSize / 2), y: Math.floor(gridSize / 2), direction: 0 },
       };
-    }
+    },
   },
   {
     id: "corner",
     name: "角から開始",
     description: "左上角から開始",
     getInitialState: (gridSize: number) => {
-      const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      const grid = Array(gridSize)
+        .fill(null)
+        .map(() => Array(gridSize).fill(false));
       return {
         grid,
-        ant: { x: 5, y: 5, direction: 1 }
+        ant: { x: 5, y: 5, direction: 1 },
       };
-    }
+    },
   },
   {
     id: "cross",
     name: "十字パターン",
     description: "十字の黒いパターンから開始",
     getInitialState: (gridSize: number) => {
-      const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      const grid = Array(gridSize)
+        .fill(null)
+        .map(() => Array(gridSize).fill(false));
       const center = Math.floor(gridSize / 2);
-      
+
       // 十字パターンを作成
       for (let i = -10; i <= 10; i++) {
         if (center + i >= 0 && center + i < gridSize) {
@@ -62,21 +68,23 @@ const INITIAL_PATTERNS: InitialPattern[] = [
           grid[center + i][center] = true; // 垂直線
         }
       }
-      
+
       return {
         grid,
-        ant: { x: center, y: center, direction: 0 }
+        ant: { x: center, y: center, direction: 0 },
       };
-    }
+    },
   },
   {
     id: "diagonal",
     name: "対角線パターン",
     description: "対角線の黒いパターンから開始",
     getInitialState: (gridSize: number) => {
-      const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      const grid = Array(gridSize)
+        .fill(null)
+        .map(() => Array(gridSize).fill(false));
       const center = Math.floor(gridSize / 2);
-      
+
       // 対角線パターンを作成
       for (let i = -15; i <= 15; i++) {
         if (center + i >= 0 && center + i < gridSize) {
@@ -86,48 +94,56 @@ const INITIAL_PATTERNS: InitialPattern[] = [
           }
         }
       }
-      
+
       return {
         grid,
-        ant: { x: center - 5, y: center - 5, direction: 1 }
+        ant: { x: center - 5, y: center - 5, direction: 1 },
       };
-    }
+    },
   },
   {
     id: "square",
     name: "正方形パターン",
     description: "正方形の黒いパターンから開始",
     getInitialState: (gridSize: number) => {
-      const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      const grid = Array(gridSize)
+        .fill(null)
+        .map(() => Array(gridSize).fill(false));
       const center = Math.floor(gridSize / 2);
       const size = 20;
-      
+
       // 正方形の枠を作成
-      for (let i = -size/2; i <= size/2; i++) {
-        for (let j = -size/2; j <= size/2; j++) {
-          if (center + i >= 0 && center + i < gridSize && 
-              center + j >= 0 && center + j < gridSize) {
-            if (Math.abs(i) === size/2 || Math.abs(j) === size/2) {
+      for (let i = -size / 2; i <= size / 2; i++) {
+        for (let j = -size / 2; j <= size / 2; j++) {
+          if (
+            center + i >= 0 &&
+            center + i < gridSize &&
+            center + j >= 0 &&
+            center + j < gridSize
+          ) {
+            if (Math.abs(i) === size / 2 || Math.abs(j) === size / 2) {
               grid[center + i][center + j] = true;
             }
           }
         }
       }
-      
+
       return {
         grid,
-        ant: { x: center, y: center, direction: 0 }
+        ant: { x: center, y: center, direction: 0 },
       };
-    }
+    },
   },
   {
     id: "random",
     name: "ランダムパターン",
     description: "中央付近にランダムな黒いセルを配置",
     getInitialState: (gridSize: number) => {
-      const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      const grid = Array(gridSize)
+        .fill(null)
+        .map(() => Array(gridSize).fill(false));
       const center = Math.floor(gridSize / 2);
-      
+
       // 中央50x50エリアにランダムに黒いセルを配置
       for (let i = 0; i < 100; i++) {
         const x = center + Math.floor(Math.random() * 50) - 25;
@@ -136,13 +152,13 @@ const INITIAL_PATTERNS: InitialPattern[] = [
           grid[y][x] = true;
         }
       }
-      
+
       return {
         grid,
-        ant: { x: center, y: center, direction: 0 }
+        ant: { x: center, y: center, direction: 0 },
       };
-    }
-  }
+    },
+  },
 ];
 
 export default function LangtonsAntPage() {
@@ -152,16 +168,16 @@ export default function LangtonsAntPage() {
   const [stepCount, setStepCount] = useState(0);
   const [gridSize, setGridSize] = useState(100);
   const [selectedPattern, setSelectedPattern] = useState("center");
-  
+
   // グリッドとありの状態
   const gridRef = useRef<boolean[][]>([]);
   const antRef = useRef<AntState>({ x: 50, y: 50, direction: 0 });
-  
+
   // グリッドの初期化
   const initializeGrid = useCallback(() => {
-    const pattern = INITIAL_PATTERNS.find(p => p.id === selectedPattern) || INITIAL_PATTERNS[0];
+    const pattern = INITIAL_PATTERNS.find((p) => p.id === selectedPattern) || INITIAL_PATTERNS[0];
     const initialState = pattern.getInitialState(gridSize);
-    
+
     gridRef.current = initialState.grid;
     antRef.current = initialState.ant;
     setStepCount(0);
@@ -171,18 +187,18 @@ export default function LangtonsAntPage() {
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    
+
     const cellSize = Math.floor(Math.min(canvas.width, canvas.height) / gridSize);
     const offsetX = (canvas.width - cellSize * gridSize) / 2;
     const offsetY = (canvas.height - cellSize * gridSize) / 2;
-    
+
     // 背景をクリア
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     // グリッドを描画
     const grid = gridRef.current;
     if (grid && grid.length > 0) {
@@ -190,17 +206,12 @@ export default function LangtonsAntPage() {
         for (let x = 0; x < gridSize && x < grid[y].length; x++) {
           if (grid[y][x]) {
             ctx.fillStyle = "#000000";
-            ctx.fillRect(
-              offsetX + x * cellSize,
-              offsetY + y * cellSize,
-              cellSize,
-              cellSize
-            );
+            ctx.fillRect(offsetX + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
           }
         }
       }
     }
-    
+
     // ありを描画
     const ant = antRef.current;
     ctx.fillStyle = "#ff0000";
@@ -210,20 +221,20 @@ export default function LangtonsAntPage() {
       cellSize - 2,
       cellSize - 2
     );
-    
+
     // ありの向きを示す矢印
     ctx.fillStyle = "#ffffff";
     ctx.font = `${Math.max(8, cellSize * 0.6)}px Arial`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    
+
     const arrows = ["↑", "→", "↓", "←"];
     ctx.fillText(
       arrows[ant.direction],
       offsetX + ant.x * cellSize + cellSize / 2,
       offsetY + ant.y * cellSize + cellSize / 2
     );
-    
+
     // グリッド線を描画
     ctx.strokeStyle = "#e0e0e0";
     ctx.lineWidth = 0.5;
@@ -232,7 +243,7 @@ export default function LangtonsAntPage() {
       ctx.moveTo(offsetX + i * cellSize, offsetY);
       ctx.lineTo(offsetX + i * cellSize, offsetY + gridSize * cellSize);
       ctx.stroke();
-      
+
       ctx.beginPath();
       ctx.moveTo(offsetX, offsetY + i * cellSize);
       ctx.lineTo(offsetX + gridSize * cellSize, offsetY + i * cellSize);
@@ -244,22 +255,28 @@ export default function LangtonsAntPage() {
   const step = useCallback(() => {
     const ant = antRef.current;
     const grid = gridRef.current;
-    
+
     // グリッドが初期化されているかチェック
     if (!grid || grid.length === 0) {
       return;
     }
-    
+
     // 境界チェック
-    if (ant.x < 0 || ant.x >= gridSize || ant.y < 0 || ant.y >= gridSize || 
-        ant.y >= grid.length || ant.x >= grid[ant.y].length) {
+    if (
+      ant.x < 0 ||
+      ant.x >= gridSize ||
+      ant.y < 0 ||
+      ant.y >= gridSize ||
+      ant.y >= grid.length ||
+      ant.x >= grid[ant.y].length
+    ) {
       setIsRunning(false);
       return;
     }
-    
+
     // 現在のセルの色を確認
     const currentCell = grid[ant.y][ant.x];
-    
+
     if (currentCell) {
       // 黒いセルの場合：左に90度回転
       ant.direction = ((ant.direction + 3) % 4) as 0 | 1 | 2 | 3;
@@ -267,10 +284,10 @@ export default function LangtonsAntPage() {
       // 白いセルの場合：右に90度回転
       ant.direction = ((ant.direction + 1) % 4) as 0 | 1 | 2 | 3;
     }
-    
+
     // セルの色を反転
     grid[ant.y][ant.x] = !currentCell;
-    
+
     // 前進
     switch (ant.direction) {
       case 0: // up
@@ -286,14 +303,14 @@ export default function LangtonsAntPage() {
         ant.x--;
         break;
     }
-    
-    setStepCount(prev => prev + 1);
+
+    setStepCount((prev) => prev + 1);
   }, [gridSize]);
 
   // アニメーションループ
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
-    
+
     if (isRunning) {
       intervalId = setInterval(() => {
         step();
@@ -302,7 +319,7 @@ export default function LangtonsAntPage() {
     } else {
       draw();
     }
-    
+
     return () => {
       if (intervalId) {
         clearInterval(intervalId);
@@ -346,12 +363,7 @@ export default function LangtonsAntPage() {
         </p>
 
         <div className="relative border rounded-lg overflow-hidden bg-white shadow-inner mb-6">
-          <canvas
-            ref={canvasRef}
-            width={800}
-            height={600}
-            className="block"
-          />
+          <canvas ref={canvasRef} width={800} height={600} className="block" />
         </div>
 
         <div className="flex flex-wrap gap-4 mb-6 items-center justify-center">
@@ -361,7 +373,7 @@ export default function LangtonsAntPage() {
           >
             {isRunning ? "停止" : "開始"}
           </button>
-          
+
           <button
             onClick={handleStep}
             disabled={isRunning}
@@ -369,7 +381,7 @@ export default function LangtonsAntPage() {
           >
             1ステップ実行
           </button>
-          
+
           <button
             onClick={handleReset}
             className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
@@ -394,9 +406,9 @@ export default function LangtonsAntPage() {
                 disabled={isRunning}
                 className={`p-3 rounded-lg border transition-all text-left ${
                   selectedPattern === pattern.id
-                    ? 'bg-blue-100 dark:bg-blue-900 border-blue-500 dark:border-blue-400'
-                    : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500'
-                } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    ? "bg-blue-100 dark:bg-blue-900 border-blue-500 dark:border-blue-400"
+                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500"
+                } ${isRunning ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               >
                 <div className="font-medium text-gray-800 dark:text-gray-200 text-sm">
                   {pattern.name}
@@ -411,9 +423,7 @@ export default function LangtonsAntPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl mb-6">
           <div className="flex flex-col items-center gap-2">
-            <label className="text-gray-700 dark:text-gray-300 font-medium">
-              速度: {speed}%
-            </label>
+            <label className="text-gray-700 dark:text-gray-300 font-medium">速度: {speed}%</label>
             <input
               type="range"
               min="1"
@@ -424,7 +434,7 @@ export default function LangtonsAntPage() {
               disabled={isRunning}
             />
           </div>
-          
+
           <div className="flex flex-col items-center gap-2">
             <label className="text-gray-700 dark:text-gray-300 font-medium">
               グリッドサイズ: {gridSize}×{gridSize}
@@ -439,16 +449,14 @@ export default function LangtonsAntPage() {
               disabled={isRunning}
             />
           </div>
-          
+
           <div className="flex flex-col items-center gap-2">
-            <label className="text-gray-700 dark:text-gray-300 font-medium">
-              ステップ数
-            </label>
+            <label className="text-gray-700 dark:text-gray-300 font-medium">ステップ数</label>
             <div className="text-2xl font-mono text-blue-600 dark:text-blue-400">
               {stepCount.toLocaleString()}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400 text-center">
-              パターン: {INITIAL_PATTERNS.find(p => p.id === selectedPattern)?.name || "不明"}
+              パターン: {INITIAL_PATTERNS.find((p) => p.id === selectedPattern)?.name || "不明"}
             </div>
           </div>
         </div>
