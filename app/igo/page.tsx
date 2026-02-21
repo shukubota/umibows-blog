@@ -6,6 +6,6 @@ const Page = () => {
       <Igo />
     </div>
   );
-}
+};
 
 export default Page;

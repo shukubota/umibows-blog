@@ -1,4 +1,4 @@
-import OthelloGame from './OthelloGame';
+import OthelloGame from "./OthelloGame";
 
 const Page = () => {
   return (
@@ -7,6 +7,6 @@ const Page = () => {
       <OthelloGame />
     </div>
   );
-}
+};
 
 export default Page;

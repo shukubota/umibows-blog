@@ -1,10 +1,12 @@
 # Agent Skills for Umibows Blog
 
 ## Mathematical Content Agent
+
 **Name**: `math-content-specialist`  
 **Description**: Specializes in LaTeX, mathematical expressions, and KaTeX integration for the blog's educational content.
 
 **Skills**:
+
 - LaTeX expression validation and optimization
 - KaTeX rendering troubleshooting
 - Mathematical notation best practices
@@ -14,10 +16,12 @@
 **Usage**: Use this agent when working on the `/app/tex/` components or any mathematical content throughout the blog.
 
 ## Interactive Visualization Agent
+
 **Name**: `visualization-developer`  
 **Description**: Expert in creating engaging interactive visualizations using HTML5 Canvas, React, and mathematical simulations.
 
 **Skills**:
+
 - Canvas-based drawing and animation
 - Physics simulation implementation (Lorenz attractor, double pendulum)
 - Game logic development (Igo, Othello)
@@ -27,10 +31,12 @@
 **Usage**: Use for any pages involving interactive elements like `/app/lorenz/`, `/app/double-pendulum/`, `/app/igo/`, or `/app/othello/`.
 
 ## Next.js Architecture Agent
+
 **Name**: `nextjs-architect`  
 **Description**: Focused on Next.js 14 app router architecture, TypeScript integration, and modern React patterns.
 
 **Skills**:
+
 - App router file structure and routing
 - Server actions and API integration
 - Component architecture and reusability
@@ -41,10 +47,12 @@
 **Usage**: Use for structural changes, new page creation, or architectural improvements across the application.
 
 ## Educational Content Agent
+
 **Name**: `edu-content-creator`  
 **Description**: Specializes in creating clear, engaging educational content and user experience optimization.
 
 **Skills**:
+
 - Educational UX/UI design patterns
 - Content structure and flow optimization
 - Accessibility improvements
@@ -54,10 +62,12 @@
 **Usage**: Use when improving user experience, adding help features, or creating new educational tools.
 
 ## API Integration Agent
+
 **Name**: `api-integration-specialist`  
 **Description**: Expert in integrating external APIs and services, particularly AI services like Claude API.
 
 **Skills**:
+
 - Anthropic Claude API integration
 - Error handling and retry logic
 - API response processing and validation
@@ -67,10 +77,12 @@
 **Usage**: Use for any external API integrations or improvements to existing API connections like the handwriting recognition feature.
 
 ## Git Workflow Agent
+
 **Name**: `git-workflow-automator`  
 **Description**: Automates git operations including staging, committing, and pushing changes with proper commit messages.
 
 **Skills**:
+
 - Intelligent commit message generation based on file changes
 - Automatic staging of related files
 - Git status analysis and conflict resolution

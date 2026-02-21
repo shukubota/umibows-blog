@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import React, { useEffect, useCallback } from 'react';
-import { useOthello } from '../../hooks/othello-claude3/use-othello';
+import React, { useEffect, useCallback } from "react";
+import { useOthello } from "../../hooks/othello-claude3/use-othello";
 
 const OthelloGame: React.FC = () => {
   const {
@@ -17,7 +17,7 @@ const OthelloGame: React.FC = () => {
     checkAndHandlePass,
   } = useOthello();
 
-  const getAvailableMoves = useCallback((board: string[][], player: 'black' | 'white') => {
+  const getAvailableMoves = useCallback((board: string[][], player: "black" | "white") => {
     const moves: [number, number][] = [];
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 4; j++) {
@@ -30,23 +30,32 @@ const OthelloGame: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (currentPlayer === 'white' && !gameOver) {
+    if (currentPlayer === "white" && !gameOver) {
       setTimeout(() => {
-        const availableMoves = getAvailableMoves(board, 'white');
+        const availableMoves = getAvailableMoves(board, "white");
         if (availableMoves.length > 0) {
           const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
           placeDisc(randomMove[0], randomMove[1]);
         } else {
-          checkAndHandlePass('white');
+          checkAndHandlePass("white");
         }
       }, 1000);
     }
   }, [currentPlayer, gameOver, board, checkAndHandlePass, getAvailableMoves, placeDisc]);
 
-  const isValidMove = (board: string[][], row: number, col: number, player: 'black' | 'white') => {
-    if (board[row][col] !== '') return false;
-    const opponent = player === 'black' ? 'white' : 'black';
-    const directions = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+  const isValidMove = (board: string[][], row: number, col: number, player: "black" | "white") => {
+    if (board[row][col] !== "") return false;
+    const opponent = player === "black" ? "white" : "black";
+    const directions = [
+      [-1, -1],
+      [-1, 0],
+      [-1, 1],
+      [0, -1],
+      [0, 1],
+      [1, -1],
+      [1, 0],
+      [1, 1],
+    ];
 
     for (const [dx, dy] of directions) {
       let x = row + dx;
@@ -69,10 +78,10 @@ const OthelloGame: React.FC = () => {
   };
 
   const handleCellClick = (row: number, col: number) => {
-    if (currentPlayer === 'black' && !gameOver) {
+    if (currentPlayer === "black" && !gameOver) {
       const result = placeDisc(row, col);
       if (!result) {
-        checkAndHandlePass('black');
+        checkAndHandlePass("black");
       }
     }
   };
@@ -91,7 +100,7 @@ const OthelloGame: React.FC = () => {
                 {cell && (
                   <div
                     className={`w-[90%] h-[90%] rounded-full ${
-                      cell === 'black' ? 'bg-black' : 'bg-white'
+                      cell === "black" ? "bg-black" : "bg-white"
                     }`}
                   />
                 )}
@@ -113,7 +122,7 @@ const OthelloGame: React.FC = () => {
       {message && <div className="mt-2 text-xl font-bold">{message}</div>}
       {gameOver && (
         <div className="mt-4 text-2xl font-bold">
-          {winner === 'draw' ? "It's a draw!" : `${winner === 'black' ? 'Black' : 'White'} wins!`}
+          {winner === "draw" ? "It's a draw!" : `${winner === "black" ? "Black" : "White"} wins!`}
         </div>
       )}
     </div>

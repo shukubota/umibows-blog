@@ -3,33 +3,19 @@
     {
       "name": "math-content-specialist",
       "description": "Specializes in LaTeX, mathematical expressions, and KaTeX integration",
-      "triggers": [
-        "tex",
-        "latex",
-        "katex",
-        "mathematical",
-        "equation",
-        "formula"
-      ],
+      "triggers": ["tex", "latex", "katex", "mathematical", "equation", "formula"],
       "tools": ["Read", "Edit", "Write", "Grep", "Bash"],
       "expertise": [
         "LaTeX expression validation",
-        "KaTeX rendering troubleshooting", 
+        "KaTeX rendering troubleshooting",
         "Mathematical notation optimization",
         "Claude API handwriting recognition"
       ]
     },
     {
-      "name": "visualization-developer", 
+      "name": "visualization-developer",
       "description": "Expert in interactive visualizations and Canvas-based applications",
-      "triggers": [
-        "canvas",
-        "animation",
-        "visualization",
-        "interactive",
-        "game",
-        "simulation"
-      ],
+      "triggers": ["canvas", "animation", "visualization", "interactive", "game", "simulation"],
       "tools": ["Read", "Edit", "Write", "Bash"],
       "expertise": [
         "HTML5 Canvas programming",
@@ -42,14 +28,7 @@
     {
       "name": "nextjs-architect",
       "description": "Next.js 14 app router architecture and TypeScript specialist",
-      "triggers": [
-        "nextjs",
-        "app router",
-        "typescript",
-        "component",
-        "architecture",
-        "routing"
-      ],
+      "triggers": ["nextjs", "app router", "typescript", "component", "architecture", "routing"],
       "tools": ["Read", "Edit", "Write", "Glob", "Grep", "Bash"],
       "expertise": [
         "App router file structure",
@@ -62,18 +41,11 @@
     {
       "name": "edu-content-creator",
       "description": "Educational content and user experience optimization specialist",
-      "triggers": [
-        "ux",
-        "ui",
-        "educational",
-        "user experience",
-        "accessibility",
-        "mobile"
-      ],
+      "triggers": ["ux", "ui", "educational", "user experience", "accessibility", "mobile"],
       "tools": ["Read", "Edit", "Write"],
       "expertise": [
         "Educational UX/UI patterns",
-        "Content flow optimization", 
+        "Content flow optimization",
         "Accessibility improvements",
         "Mobile responsiveness",
         "User guidance systems"
@@ -82,14 +54,7 @@
     {
       "name": "api-integration-specialist",
       "description": "External API integration and AI services expert",
-      "triggers": [
-        "api",
-        "claude",
-        "anthropic",
-        "integration",
-        "external service",
-        "ai"
-      ],
+      "triggers": ["api", "claude", "anthropic", "integration", "external service", "ai"],
       "tools": ["Read", "Edit", "Write", "Bash", "Grep"],
       "expertise": [
         "Anthropic Claude API integration",
@@ -102,15 +67,7 @@
     {
       "name": "git-workflow-automator",
       "description": "Automates git operations with intelligent commit messages and workflow management",
-      "triggers": [
-        "commit",
-        "push",
-        "save changes",
-        "save work",
-        "git",
-        "stage",
-        "repository"
-      ],
+      "triggers": ["commit", "push", "save changes", "save work", "git", "stage", "repository"],
       "tools": ["Bash", "Read", "Grep"],
       "expertise": [
         "Intelligent commit message generation",
