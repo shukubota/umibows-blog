@@ -58,10 +58,10 @@ scan_pattern() {
 
     echo "  🔍 Scanning for $pattern_name..."
 
-    # Scan all files recursively
-    if grep -r -n -E "$pattern" . $EXCLUDE_ARGS 2>/dev/null | grep -v "\.claude/skills/" | grep -v "\.envrc" >> "$TEMP_FILE"; then
+    # Scan all files recursively, excluding placeholder values
+    if grep -r -n -E "$pattern" . $EXCLUDE_ARGS 2>/dev/null | grep -v "\.claude/skills/" | grep -v "\.envrc" | grep -v "your_.*_here" | grep -v "example" | grep -v "template" | grep -v "dummy" | grep -v "placeholder" >> "$TEMP_FILE"; then
         echo "    ⚠️  Found potential $pattern_name violations:"
-        grep -r -n -E "$pattern" . $EXCLUDE_ARGS 2>/dev/null | grep -v "\.claude/skills/" | grep -v "\.envrc" | while read -r line; do
+        grep -r -n -E "$pattern" . $EXCLUDE_ARGS 2>/dev/null | grep -v "\.claude/skills/" | grep -v "\.envrc" | grep -v "your_.*_here" | grep -v "example" | grep -v "template" | grep -v "dummy" | grep -v "placeholder" | while read -r line; do
             echo "    📍 $line"
         done
         return 1
