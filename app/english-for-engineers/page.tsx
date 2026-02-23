@@ -489,7 +489,7 @@ export default function EnglishForEngineersPage() {
                       {scenario.keyPhrases.map((phrase, index) => (
                         <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                           <div className="font-medium text-blue-600 dark:text-blue-400 mb-1">
-                            "{phrase.english}"
+                            &ldquo;{phrase.english}&rdquo;
                           </div>
                           <div className="text-gray-800 dark:text-gray-200 mb-2">
                             🇯🇵 {phrase.japanese}
