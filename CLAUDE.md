@@ -91,6 +91,23 @@ Required environment variables:
 - Prefer server actions for AI API interactions
 - Use useRef for Canvas and animation state management
 
+## Development Workflow Guidelines
+
+### Git Operations
+- **Never automatically commit or push** changes after file modifications
+- **Only execute git operations** when explicitly requested by user with commands like:
+  - "commit" - Create commit only
+  - "commit push" - Create commit and push to remote
+  - "quality commit" - Run quality checks then commit
+- **Always ask for confirmation** before executing destructive git operations
+- **Use clear commit messages** following conventional format with Co-Authored-By tag
+- **Report status only** after completing file changes, do not auto-commit
+
+### Code Modifications
+- **Complete requested changes first**, then wait for git instructions
+- **Stage related files together** when creating commits
+- **Include meaningful commit messages** that explain the why, not just the what
+
 ## Development Notes
 
 - **HTTPS Required**: Camera access in TeX Previewer requires `npm run dev:https`
