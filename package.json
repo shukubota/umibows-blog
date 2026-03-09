@@ -18,7 +18,7 @@
     "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
     "@mui/material": "^5.15.19",
-    "katex": "^0.16.27",
+    "katex": "^0.16.32",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18"
