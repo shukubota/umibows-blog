@@ -1,0 +1,11 @@
+services:
+  goose:
+    build: .
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_AI_API_KEY}
+      - GOOSE_PROVIDER=google
+      - GOOSE_MODEL=gemini-3.1-pro-preview
+    volumes:
+      - ./goose-config:/root/.config/goose
+    stdin_open: true
+    tty: true
