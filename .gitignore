@@ -39,3 +39,6 @@ next-env.d.ts
 .envrc
 
 certificates
+
+# goose config backup
+*.bak
