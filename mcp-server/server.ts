@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import express from "express";
+import express, { Request, Response } from "express";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { readFile, writeFile, readdir } from "fs/promises";
@@ -11,7 +11,7 @@ import path from "path";
 const execAsync = promisify(exec);
 const PROJECT_ROOT = "/Users/shukubota/projects/umibows-blog";
 
-function createServer() {
+function createServer(): McpServer {
   const server = new McpServer({ name: "blog-tools", version: "1.0.0" });
 
   server.tool(
@@ -88,15 +88,13 @@ function createServer() {
 const app = express();
 app.use(express.json());
 
-const transports = new Map();
+const transports = new Map<string, StreamableHTTPServerTransport>();
 
-// POST: クライアントからのメッセージ受信
-app.post("/mcp", async (req, res) => {
-  const sessionId = req.headers["mcp-session-id"];
+app.post("/mcp", async (req: Request, res: Response) => {
+  const sessionId = req.headers["mcp-session-id"] as string | undefined;
   console.log(`[MCP] POST method=${req.body?.method} session=${sessionId ?? "new"}`);
 
   if (!sessionId) {
-    // 新規セッション
     const id = randomUUID();
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => id });
     const server = createServer();
@@ -105,26 +103,24 @@ app.post("/mcp", async (req, res) => {
     transport.onclose = () => transports.delete(id);
     await transport.handleRequest(req, res, req.body);
   } else if (transports.has(sessionId)) {
-    await transports.get(sessionId).handleRequest(req, res, req.body);
+    await transports.get(sessionId)!.handleRequest(req, res, req.body);
   } else {
     res.status(404).json({ error: "Session not found" });
   }
 });
 
-// GET: SSE ストリーム（サーバーからのプッシュ用）
-app.get("/mcp", async (req, res) => {
-  const sessionId = req.headers["mcp-session-id"];
+app.get("/mcp", async (req: Request, res: Response) => {
+  const sessionId = req.headers["mcp-session-id"] as string | undefined;
   console.log(`[MCP] GET session=${sessionId}`);
   if (!sessionId || !transports.has(sessionId)) {
     res.status(400).send("Invalid session");
     return;
   }
-  await transports.get(sessionId).handleRequest(req, res);
+  await transports.get(sessionId)!.handleRequest(req, res);
 });
 
-// DELETE: セッション終了
-app.delete("/mcp", (req, res) => {
-  const sessionId = req.headers["mcp-session-id"];
+app.delete("/mcp", (req: Request, res: Response) => {
+  const sessionId = req.headers["mcp-session-id"] as string | undefined;
   if (sessionId) transports.delete(sessionId);
   res.status(200).send("OK");
 });
