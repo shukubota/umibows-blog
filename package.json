@@ -20,6 +20,7 @@
     "@mui/material": "^5.15.19",
     "katex": "^0.16.27",
     "next": "14.2.3",
+    "onnxruntime-node": "^1.25.1",
     "react": "^18",
     "react-dom": "^18"
   },
