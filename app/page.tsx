@@ -14,8 +14,6 @@ export default function Home() {
     { id: "lorenz", title: "Lorenz Attractor Simulation", path: "/lorenz" },
     { id: "igo", title: "Igo (Go Game)", path: "/igo" },
     { id: "weather-map", title: "Weather Map (Windy)", path: "/weather-map" },
-    { id: 2, title: "Second Blog Post", path: "/blog/2" },
-    { id: 3, title: "Third Blog Post", path: "/blog/3" },
   ];
 
   return (
