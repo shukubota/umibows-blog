@@ -53,5 +53,5 @@ public/models/*
 # go self-play checkpoints (keep only pretrain + latest)
 scripts/igo/checkpoints/*
 !scripts/igo/checkpoints/kgs_pretrain.pt
-!scripts/igo/checkpoints/iter_051.pt
+!scripts/igo/checkpoints/iter_101.pt
 scripts/igo/__pycache__/
