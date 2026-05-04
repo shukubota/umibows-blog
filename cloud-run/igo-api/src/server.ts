@@ -2,7 +2,6 @@ import express from "express";
 import path from "path";
 import { Grid, Point, StoneColor, getAllLegalMoves, pointKey } from "./engine";
 import { boardToFeatures, N_PLANES } from "./board-features";
-import { puctMcts } from "./puct-mcts";
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
@@ -75,13 +74,19 @@ app.post("/predict", async (req, res) => {
     }
     const priors = new Map<string, number>(exps.map(({ key, exp }) => [key, exp / sumExp]));
 
+    // Pick the legal move with the highest NN prior (no rollout MCTS needed)
     const t0 = Date.now();
-    const move: Point | null = puctMcts(grid, color, previousGrid, priors, 800);
+    let bestMove: Point = legalMoves[0];
+    let bestPrior = -Infinity;
+    for (const m of legalMoves) {
+      const p = priors.get(pointKey(m)) ?? 0;
+      if (p > bestPrior) { bestPrior = p; bestMove = m; }
+    }
     console.log(
-      `[igo-api] move: ${move ? `(${move.row},${move.col})` : "null"} in ${Date.now() - t0}ms`
+      `[igo-api] move: (${bestMove.row},${bestMove.col}) prior=${(bestPrior * 100).toFixed(1)}% in ${Date.now() - t0}ms`
     );
 
-    res.json({ move });
+    res.json({ move: bestMove });
   } catch (e) {
     console.error("[igo-api] predict error:", e);
     res.status(500).json({ error: "inference failed" });
