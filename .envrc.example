@@ -5,3 +5,9 @@ export GOOGLE_AI_API_KEY=your_google_ai_api_key_here
 export BASIC_AUTH_ENABLED=false
 export BASIC_AUTH_USER=admin
 export BASIC_AUTH_PASSWORD=your_secure_password_here
+
+# Anthropic Vertex AI (Claude via Google Cloud)
+export ANTHROPIC_VERTEX_PROJECT_ID=your-gcp-project-id
+export CLOUD_ML_REGION=global
+export ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6
+export ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-4-5@20251001
