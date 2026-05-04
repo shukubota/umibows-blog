@@ -14,6 +14,9 @@ export default function Home() {
     { id: "lorenz", title: "Lorenz Attractor Simulation", path: "/lorenz" },
     { id: "igo", title: "Igo (Go Game)", path: "/igo" },
     { id: "weather-map", title: "Weather Map (Windy)", path: "/weather-map" },
+    { id: "company-english", title: "Company English Q&A", path: "/company-english" },
+    { id: "nn-viz", title: "Neural Network — Forward Propagation", path: "/nn-viz" },
+    { id: "nn-train", title: "Neural Network — Live Training", path: "/nn-train" },
   ];
 
   return (
