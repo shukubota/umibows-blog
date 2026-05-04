@@ -334,7 +334,7 @@ class _GameState:
 
 
 def parallel_self_play(model, device, n_games, n_sims,
-                       temp_moves=20, dirichlet_alpha=0.03, dirichlet_eps=0.25):
+                       temp_moves=20, dirichlet_alpha=0.25, dirichlet_eps=0.25):
     """
     Run n_games games simultaneously with batched NN leaf evaluation.
 
