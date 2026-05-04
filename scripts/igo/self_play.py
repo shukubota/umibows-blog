@@ -4,28 +4,25 @@ AlphaZero-style self-play training for 9×9 Go.
 Algorithm:
   Loop:
     1. Self-play  : PUCT-MCTS + value network → (state, π, z) tuples
+                   All games run in parallel with batched NN leaf evaluation.
+                   Board logic is JIT-compiled with Numba for ~10-30x speedup.
     2. Train      : policy cross-entropy + value MSE
     3. Export     : ONNX (policy + value outputs)
 
 Usage:
-  # Fresh start
-  python scripts/igo/self_play.py
-
-  # Resume
-  python scripts/igo/self_play.py --checkpoint scripts/igo/checkpoints/iter_005.pt
-
-  # Quick smoke-test (fast, weak)
-  python scripts/igo/self_play.py --iterations 2 --games 5 --sims 50
+  python scripts/igo/self_play.py                          # default (20 iter)
+  python scripts/igo/self_play.py --iterations 2 --games 5 --sims 50  # smoke-test
+  python scripts/igo/self_play.py --checkpoint scripts/igo/checkpoints/iter_010.pt
 """
 
 import argparse
 import math
-import os
 import random
 import time
 from collections import deque
 from pathlib import Path
 
+import numba as nb
 import numpy as np
 import torch
 import torch.nn as nn
@@ -37,94 +34,197 @@ N_PLANES = 4
 KOMI = 6.5
 C_PUCT = 1.5
 
-# ── Board simulation ────────────────────────────────────────────────────────
+# ── Board simulation (Numba JIT) ─────────────────────────────────────────────
 
-def _neighbors(r, c):
-    for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-        nr, nc = r + dr, c + dc
-        if 0 <= nr < BOARD and 0 <= nc < BOARD:
-            yield nr, nc
-
-def _find_group(board, r, c):
-    color, visited, stack = board[r][c], set(), [(r, c)]
-    while stack:
-        cur = stack.pop()
-        if cur in visited:
+@nb.njit(cache=True)
+def _find_group_nb(board, r, c):
+    color = board[r, c]
+    mask = np.zeros((BOARD, BOARD), dtype=np.bool_)
+    stack_r = np.empty(BOARD * BOARD, dtype=np.int32)
+    stack_c = np.empty(BOARD * BOARD, dtype=np.int32)
+    stack_r[0] = r; stack_c[0] = c; top = 1
+    while top > 0:
+        top -= 1
+        cr = stack_r[top]; cc = stack_c[top]
+        if mask[cr, cc]:
             continue
-        visited.add(cur)
-        for n in _neighbors(*cur):
-            if board[n[0]][n[1]] == color and n not in visited:
-                stack.append(n)
-    return visited
+        mask[cr, cc] = True
+        if cr > 0 and board[cr-1, cc] == color and not mask[cr-1, cc]:
+            stack_r[top] = cr-1; stack_c[top] = cc; top += 1
+        if cr < BOARD-1 and board[cr+1, cc] == color and not mask[cr+1, cc]:
+            stack_r[top] = cr+1; stack_c[top] = cc; top += 1
+        if cc > 0 and board[cr, cc-1] == color and not mask[cr, cc-1]:
+            stack_r[top] = cr; stack_c[top] = cc-1; top += 1
+        if cc < BOARD-1 and board[cr, cc+1] == color and not mask[cr, cc+1]:
+            stack_r[top] = cr; stack_c[top] = cc+1; top += 1
+    return mask
 
-def _liberties(board, group):
-    return {(nr, nc) for r, c in group for nr, nc in _neighbors(r, c) if board[nr][nc] == 0}
+
+@nb.njit(cache=True)
+def _has_liberty_nb(board, mask):
+    for r in range(BOARD):
+        for c in range(BOARD):
+            if mask[r, c]:
+                if r > 0 and board[r-1, c] == 0: return True
+                if r < BOARD-1 and board[r+1, c] == 0: return True
+                if c > 0 and board[r, c-1] == 0: return True
+                if c < BOARD-1 and board[r, c+1] == 0: return True
+    return False
+
+
+@nb.njit(cache=True)
+def _place_stone_nb(board, r, c, color):
+    """Try placing color at (r, c). Returns (board, is_legal); board is a copy when legal."""
+    if board[r, c] != 0:
+        return board, False
+    new = board.copy()
+    new[r, c] = color
+    opp = -color
+    if r > 0 and new[r-1, c] == opp:
+        grp = _find_group_nb(new, r-1, c)
+        if not _has_liberty_nb(new, grp):
+            for gr in range(BOARD):
+                for gc in range(BOARD):
+                    if grp[gr, gc]: new[gr, gc] = 0
+    if r < BOARD-1 and new[r+1, c] == opp:
+        grp = _find_group_nb(new, r+1, c)
+        if not _has_liberty_nb(new, grp):
+            for gr in range(BOARD):
+                for gc in range(BOARD):
+                    if grp[gr, gc]: new[gr, gc] = 0
+    if c > 0 and new[r, c-1] == opp:
+        grp = _find_group_nb(new, r, c-1)
+        if not _has_liberty_nb(new, grp):
+            for gr in range(BOARD):
+                for gc in range(BOARD):
+                    if grp[gr, gc]: new[gr, gc] = 0
+    if c < BOARD-1 and new[r, c+1] == opp:
+        grp = _find_group_nb(new, r, c+1)
+        if not _has_liberty_nb(new, grp):
+            for gr in range(BOARD):
+                for gc in range(BOARD):
+                    if grp[gr, gc]: new[gr, gc] = 0
+    grp = _find_group_nb(new, r, c)
+    if not _has_liberty_nb(new, grp):
+        return board, False
+    return new, True
+
+
+@nb.njit(cache=True)
+def _boards_equal_nb(a, b):
+    for r in range(BOARD):
+        for c in range(BOARD):
+            if a[r, c] != b[r, c]:
+                return False
+    return True
+
+
+@nb.njit(cache=True)
+def _get_legal_moves_nb(board, color, prev_board, has_prev):
+    """Returns (legal_r, legal_c, count). Only first `count` entries are valid."""
+    legal_r = np.empty(BOARD * BOARD, dtype=np.int32)
+    legal_c = np.empty(BOARD * BOARD, dtype=np.int32)
+    count = 0
+    for r in range(BOARD):
+        for c in range(BOARD):
+            if board[r, c] != 0:
+                continue
+            new, ok = _place_stone_nb(board, r, c, color)
+            if not ok:
+                continue
+            if has_prev and _boards_equal_nb(new, prev_board):
+                continue
+            legal_r[count] = r
+            legal_c[count] = c
+            count += 1
+    return legal_r, legal_c, count
+
+
+@nb.njit(cache=True)
+def _score_board_nb(board):
+    """Territory scoring. Returns 1 (black wins) or -1 (white wins)."""
+    black = 0.0
+    white = KOMI
+    for r in range(BOARD):
+        for c in range(BOARD):
+            v = board[r, c]
+            if v == 1: black += 1.0
+            elif v == -1: white += 1.0
+    visited = np.zeros((BOARD, BOARD), dtype=np.bool_)
+    stack_r = np.empty(BOARD * BOARD, dtype=np.int32)
+    stack_c = np.empty(BOARD * BOARD, dtype=np.int32)
+    for sr in range(BOARD):
+        for sc in range(BOARD):
+            if board[sr, sc] != 0 or visited[sr, sc]:
+                continue
+            top = 0; reg_count = 0
+            stack_r[0] = sr; stack_c[0] = sc; top = 1
+            border_black = False; border_white = False
+            while top > 0:
+                top -= 1
+                cr = stack_r[top]; cc = stack_c[top]
+                if visited[cr, cc]:
+                    continue
+                visited[cr, cc] = True
+                reg_count += 1
+                if cr > 0:
+                    v = board[cr-1, cc]
+                    if v == 1: border_black = True
+                    elif v == -1: border_white = True
+                    elif not visited[cr-1, cc]: stack_r[top] = cr-1; stack_c[top] = cc; top += 1
+                if cr < BOARD-1:
+                    v = board[cr+1, cc]
+                    if v == 1: border_black = True
+                    elif v == -1: border_white = True
+                    elif not visited[cr+1, cc]: stack_r[top] = cr+1; stack_c[top] = cc; top += 1
+                if cc > 0:
+                    v = board[cr, cc-1]
+                    if v == 1: border_black = True
+                    elif v == -1: border_white = True
+                    elif not visited[cr, cc-1]: stack_r[top] = cr; stack_c[top] = cc-1; top += 1
+                if cc < BOARD-1:
+                    v = board[cr, cc+1]
+                    if v == 1: border_black = True
+                    elif v == -1: border_white = True
+                    elif not visited[cr, cc+1]: stack_r[top] = cr; stack_c[top] = cc+1; top += 1
+            if border_black and not border_white:
+                black += reg_count
+            elif border_white and not border_black:
+                white += reg_count
+    return 1 if black > white else -1
+
+
+# ── Python wrappers (same interface as before) ───────────────────────────────
 
 def place_stone(board, r, c, color):
-    """Returns new board or None if illegal (suicide / occupied)."""
-    if board[r][c] != 0:
-        return None
-    new = board.copy()
-    new[r][c] = color
-    opp = -color
-    for nr, nc in list(_neighbors(r, c)):
-        if new[nr][nc] == opp:
-            grp = _find_group(new, nr, nc)
-            if not _liberties(new, grp):
-                for gr, gc in grp:
-                    new[gr][gc] = 0
-    if not _liberties(new, _find_group(new, r, c)):
-        return None
-    return new
+    new, ok = _place_stone_nb(board, r, c, color)
+    return new if ok else None
 
 def get_legal_moves(board, color, prev_board=None):
-    moves = []
-    for r in range(BOARD):
-        for c in range(BOARD):
-            if board[r][c] != 0:
-                continue
-            new = place_stone(board, r, c, color)
-            if new is None:
-                continue
-            if prev_board is not None and np.array_equal(new, prev_board):
-                continue  # simple ko
-            moves.append((r, c))
-    return moves
+    dummy = board if prev_board is None else prev_board
+    lr, lc, count = _get_legal_moves_nb(board, color, dummy, prev_board is not None)
+    return [(int(lr[i]), int(lc[i])) for i in range(count)]
 
 def score_board(board):
-    """Territory scoring. Returns 1 (black wins) or -1 (white wins)."""
-    black = float(np.sum(board == 1))
-    white = float(np.sum(board == -1)) + KOMI
-    visited = np.zeros((BOARD, BOARD), bool)
-    for r in range(BOARD):
-        for c in range(BOARD):
-            if board[r][c] != 0 or visited[r][c]:
-                continue
-            region, borders, queue = [], set(), [(r, c)]
-            while queue:
-                cr, cc = queue.pop()
-                if visited[cr][cc]:
-                    continue
-                visited[cr][cc] = True
-                region.append((cr, cc))
-                for nr, nc in _neighbors(cr, cc):
-                    if board[nr][nc] != 0:
-                        borders.add(board[nr][nc])
-                    elif not visited[nr][nc]:
-                        queue.append((nr, nc))
-            if len(borders) == 1:
-                owner = next(iter(borders))
-                if owner == 1:
-                    black += len(region)
-                else:
-                    white += len(region)
-    return 1 if black > white else -1
+    return int(_score_board_nb(board))
+
+
+def _warmup_numba():
+    """Pre-compile all Numba JIT functions (first call triggers compilation)."""
+    print("  Warming up Numba JIT...", end=" ", flush=True)
+    t = time.time()
+    dummy = np.zeros((BOARD, BOARD), dtype=np.int8)
+    dummy[4, 4] = 1
+    place_stone(dummy, 3, 4, -1)
+    get_legal_moves(dummy, 1)
+    get_legal_moves(dummy, -1, dummy.copy())
+    score_board(dummy)
+    print(f"done ({time.time()-t:.1f}s)")
 
 
 # ── Features & augmentation ─────────────────────────────────────────────────
 
 def board_to_features(board, color):
-    """board: int8 BOARD×BOARD (1=black,-1=white). color: 1=black,-1=white."""
     feat = np.zeros((N_PLANES, BOARD, BOARD), dtype=np.float32)
     feat[0] = (board == color)
     feat[1] = (board == -color)
@@ -133,7 +233,6 @@ def board_to_features(board, color):
     return feat
 
 def augment(feat, pi_board):
-    """Apply a random one of 8 board symmetries."""
     k = random.randint(0, 7)
     rot, flip = k % 4, k // 4
     feat = np.rot90(feat, rot, axes=(1, 2)).copy()
@@ -181,7 +280,7 @@ class GoNet(nn.Module):
         return self.policy_head(h), self.value_head(h)
 
 
-# ── MCTS ────────────────────────────────────────────────────────────────────
+# ── MCTS node ────────────────────────────────────────────────────────────────
 
 class _Node:
     __slots__ = ["visit_count", "value_sum", "children", "prior", "is_expanded"]
@@ -197,166 +296,179 @@ class _Node:
         return self.value_sum / self.visit_count if self.visit_count > 0 else 0.0
 
     def select_child(self):
-        N = max(self.visit_count, 1)
+        sqrt_N = math.sqrt(max(self.visit_count, 1))
         best_score, best_move, best_child = -float("inf"), None, None
         for move, child in self.children.items():
-            score = child.q() + C_PUCT * child.prior * math.sqrt(N) / (1 + child.visit_count)
+            vc = child.visit_count
+            q = child.value_sum / vc if vc > 0 else 0.0
+            score = q + C_PUCT * child.prior * sqrt_N / (1 + vc)
             if score > best_score:
                 best_score, best_move, best_child = score, move, child
         return best_move, best_child
 
 
-@torch.no_grad()
-def _nn_eval(model, device, board, color):
-    feat = torch.from_numpy(board_to_features(board, color)).unsqueeze(0).to(device)
-    logits, value = model(feat)
-    policy = F.softmax(logits, dim=1).cpu().numpy()[0]
-    return policy, value.item()
+# ── Parallel self-play ───────────────────────────────────────────────────────
+
+class _GameState:
+    """State for one game in the parallel self-play pool."""
+    __slots__ = ["board", "color", "prev_board", "history",
+                 "passes", "done", "winner", "move_num", "root"]
+
+    def __init__(self):
+        self.board = np.zeros((BOARD, BOARD), dtype=np.int8)
+        self.color = 1
+        self.prev_board = None
+        self.history = []
+        self.passes = 0
+        self.done = False
+        self.winner = None
+        self.move_num = 0
+        self.root = _Node()
 
 
-def mcts_search(model, device, board, color, prev_board, n_sims,
-                dirichlet_alpha=0.03, dirichlet_eps=0.25):
+def parallel_self_play(model, device, n_games, n_sims,
+                       temp_moves=20, dirichlet_alpha=0.03, dirichlet_eps=0.25):
     """
-    Run PUCT-MCTS from (board, color).
-    Returns (pi [81], best_move or None).
+    Run n_games games simultaneously with batched NN leaf evaluation.
 
-    Value convention: node.value_sum stores from the perspective of the player
-    who MADE THE MOVE to reach that node (the parent's player).
-    Selection: maximize child.q() + U  (q is from parent's perspective) ✓
-    Backprop: sign starts at -1 (leaf mover = -sim_color), alternates up the path.
+    Each MCTS round (1 of n_sims):
+      1. Selection  : traverse each game's tree to a leaf (board logic via Numba)
+      2. Batch eval : stack all unexpanded non-terminal leaves → ONE forward pass
+      3. Expansion  : expand each leaf with the returned policy
+      4. Backprop   : update visit counts and value sums
+
+    NN call count:
+      before : n_games × n_moves × n_sims  (batch=1 each)
+      after  : n_moves × n_sims            (batch=n_active_games each)
     """
-    root = _Node()
+    games = [_GameState() for _ in range(n_games)]
 
-    for _ in range(n_sims):
-        node = root
-        sim_board = board.copy()
-        sim_color = color
-        sim_prev = prev_board
-        path = [node]
+    while True:
+        active = [g for g in games if not g.done]
+        if not active:
+            break
 
-        # ── Selection ──
-        while node.is_expanded and node.children:
-            move, child = node.select_child()
-            if move is None:
-                break
-            new_board = place_stone(sim_board, *move, sim_color)
-            if new_board is None:
-                break
-            sim_prev = sim_board
-            sim_board = new_board
-            sim_color = -sim_color
-            node = child
-            path.append(node)
+        for _ in range(n_sims):
 
-        # ── Expansion + evaluation ──
-        if not node.is_expanded:
-            legal = get_legal_moves(sim_board, sim_color, sim_prev)
-            if not legal:
-                # Game over at this node: convert absolute winner to sim_color's perspective
-                v = float(score_board(sim_board)) * sim_color
-            else:
-                policy, v = _nn_eval(model, device, sim_board, sim_color)
+            # ── Selection: one path per active game ──────────────────────────
+            leaves = []
+            for g in active:
+                node = g.root
+                sb, sc, sp = g.board.copy(), g.color, g.prev_board
+                path = [node]
+                while node.is_expanded and node.children:
+                    move, child = node.select_child()
+                    if move is None:
+                        break
+                    new = place_stone(sb, *move, sc)
+                    if new is None:
+                        break
+                    sp, sb, sc = sb, new, -sc
+                    node = child
+                    path.append(node)
+                legal = get_legal_moves(sb, sc, sp)
+                leaves.append((g, node, path, sb, sc, sp, legal))
 
-                # Dirichlet noise at root for exploration
-                if node is root:
-                    noise = np.random.dirichlet([dirichlet_alpha] * len(legal))
-                    probs = [(1 - dirichlet_eps) * policy[r * BOARD + c] + dirichlet_eps * noise[i]
-                             for i, (r, c) in enumerate(legal)]
+            # ── Batch NN eval for unexpanded non-terminal leaves ─────────────
+            nn_items = [(i, lf) for i, lf in enumerate(leaves)
+                        if not lf[1].is_expanded and lf[6]]
+            pols_b = vals_b = None
+            if nn_items:
+                feats = torch.stack([
+                    torch.from_numpy(board_to_features(lf[3], lf[4]))
+                    for _, lf in nn_items
+                ]).to(device)
+                with torch.no_grad():
+                    logits_b, v_b = model(feats)
+                pols_b = F.softmax(logits_b, dim=1).cpu().numpy()
+                vals_b = v_b.cpu().numpy().flatten()
+
+            # ── Expansion + backprop ─────────────────────────────────────────
+            nn_i = 0
+            for g, node, path, sb, sc, sp, legal in leaves:
+                if not node.is_expanded:
+                    if not legal:
+                        v = float(score_board(sb)) * sc
+                    else:
+                        policy, v = pols_b[nn_i], float(vals_b[nn_i])
+                        nn_i += 1
+                        if node is g.root:
+                            noise = np.random.dirichlet([dirichlet_alpha] * len(legal))
+                            probs = [(1 - dirichlet_eps) * policy[r * BOARD + c]
+                                     + dirichlet_eps * noise[j]
+                                     for j, (r, c) in enumerate(legal)]
+                        else:
+                            probs = [policy[r * BOARD + c] for r, c in legal]
+                        tot = sum(probs) or 1.0
+                        for j, (r, c) in enumerate(legal):
+                            node.children[(r, c)] = _Node(prior=probs[j] / tot)
+                    node.is_expanded = True
                 else:
-                    probs = [policy[r * BOARD + c] for r, c in legal]
+                    v = node.q()
 
-                total = sum(probs) or 1.0
-                for i, (r, c) in enumerate(legal):
-                    node.children[(r, c)] = _Node(prior=probs[i] / total)
+                sign = -1
+                for nd in reversed(path[1:]):
+                    nd.visit_count += 1
+                    nd.value_sum += sign * v
+                    sign = -sign
+                g.root.visit_count += 1
 
-            node.is_expanded = True
-        else:
-            v = node.q()
+        # ── Pick moves for all active games ───────────────────────────────────
+        for g in active:
+            legal = get_legal_moves(g.board, g.color, g.prev_board)
+            if not legal:
+                g.passes += 1
+                if g.passes >= 2:
+                    g.done = True
+                    g.winner = score_board(g.board)
+                else:
+                    g.color = -g.color
+                    g.root = _Node()
+                continue
+            g.passes = 0
 
-        # ── Backprop ──
-        # v is from sim_color's perspective.
-        # Leaf's mover = -sim_color → its value from mover's perspective = -v.
-        # Sign alternates going up: -1, +1, -1, ...
-        sign = -1
-        for n in reversed(path[1:]):   # skip root in value update
-            n.visit_count += 1
-            n.value_sum += sign * v
-            sign = -sign
-        root.visit_count += 1
+            pi = np.zeros(BOARD * BOARD, dtype=np.float32)
+            for (r, c), child in g.root.children.items():
+                pi[r * BOARD + c] = child.visit_count
+            if pi.sum() > 0:
+                pi /= pi.sum()
+            g.history.append((board_to_features(g.board, g.color), pi, g.color))
 
-    # Build π from visit counts
-    pi = np.zeros(BOARD * BOARD, dtype=np.float32)
-    for (r, c), child in root.children.items():
-        pi[r * BOARD + c] = child.visit_count
-    if pi.sum() > 0:
-        pi /= pi.sum()
-
-    best_move = (max(root.children, key=lambda m: root.children[m].visit_count)
-                 if root.children else None)
-    return pi, best_move
-
-
-# ── Self-play ────────────────────────────────────────────────────────────────
-
-def self_play_game(model, device, n_sims, temp_moves=20):
-    """
-    Play one game. Returns (samples, winner).
-    samples: list of (features [4,9,9], pi [81], z scalar)  – with 8× augmentation
-    winner: 1 (black) or -1 (white)
-    """
-    board = np.zeros((BOARD, BOARD), dtype=np.int8)
-    color = 1       # black moves first
-    prev_board = None
-    history = []    # (features, pi, color_at_move)
-    passes = 0
-
-    for move_num in range(BOARD * BOARD * 3):
-        legal = get_legal_moves(board, color, prev_board)
-
-        if not legal:
-            passes += 1
-            if passes >= 2:
-                break
-            color = -color
-            continue
-        passes = 0
-
-        pi, best_move = mcts_search(model, device, board, color, prev_board, n_sims)
-        history.append((board_to_features(board, color), pi, color))
-
-        # Temperature: sample from distribution early, greedy later
-        if move_num < temp_moves:
-            legal_idx = [r * BOARD + c for r, c in legal]
-            legal_pi = pi[legal_idx]
-            s = legal_pi.sum()
-            if s > 0:
-                move_idx = np.random.choice(legal_idx, p=legal_pi / s)
+            if g.move_num < temp_moves:
+                lidx = [r * BOARD + c for r, c in legal]
+                lpi = pi[lidx]
+                s = lpi.sum()
+                probs = lpi / s if s > 0 else np.ones(len(lidx)) / len(lidx)
+                move_idx = np.random.choice(lidx, p=probs)
+                move = (move_idx // BOARD, move_idx % BOARD)
             else:
-                move_idx = random.choice(legal_idx)
-            move = (move_idx // BOARD, move_idx % BOARD)
-        else:
-            move = best_move
+                move = max(g.root.children, key=lambda m: g.root.children[m].visit_count)
 
-        if move is None:
-            break
+            new_board = place_stone(g.board, *move, g.color)
+            if new_board is None:
+                g.done = True
+                g.winner = score_board(g.board)
+                continue
 
-        new_board = place_stone(board, *move, color)
-        if new_board is None:
-            break
-        prev_board = board
-        board = new_board
-        color = -color
+            g.prev_board = g.board
+            g.board = new_board
+            g.color = -g.color
+            g.move_num += 1
+            g.root = _Node()
 
-    winner = score_board(board)
+            if g.move_num >= BOARD * BOARD * 3:
+                g.done = True
+                g.winner = score_board(g.board)
 
-    # Build training samples with 8-fold symmetry augmentation
-    samples = []
-    for feat, pi, move_color in history:
-        z = np.float32(winner * move_color)  # +1 if mover won, -1 if mover lost
-        aug_feat, aug_pi = augment(feat, pi.reshape(BOARD, BOARD))
-        samples.append((aug_feat, aug_pi.flatten(), z))
-
-    return samples, winner
+    samples, winners = [], []
+    for g in games:
+        w = g.winner if g.winner is not None else score_board(g.board)
+        winners.append(w)
+        for feat, pi, mc in g.history:
+            z = np.float32(w * mc)
+            af, ap = augment(feat, pi.reshape(BOARD, BOARD))
+            samples.append((af, ap.flatten(), z))
+    return samples, winners
 
 
 # ── Training ────────────────────────────────────────────────────────────────
@@ -365,7 +477,6 @@ def train_on_buffer(model, optimizer, buffer, device, batch_size=256, n_batches=
     if len(buffer) < batch_size:
         return None, None
 
-    # Sample from replay buffer
     sample_size = min(len(buffer), batch_size * n_batches)
     indices = random.sample(range(len(buffer)), sample_size)
     feats = torch.stack([buffer[i][0] for i in indices]).to(device)
@@ -404,7 +515,6 @@ def export_onnx(model, device, out_path):
         output_names=["policy", "value"],
         dynamic_axes={"input": {0: "batch"}, "policy": {0: "batch"}, "value": {0: "batch"}},
         opset_version=17,
-        dynamo=False,
     )
     size_mb = Path(out_path).stat().st_size / 1024 / 1024
     print(f"  ONNX exported → {out_path}  ({size_mb:.2f} MB)")
@@ -414,22 +524,16 @@ def export_onnx(model, device, out_path):
 
 def main():
     parser = argparse.ArgumentParser(description="AlphaZero self-play for 9×9 Go")
-    parser.add_argument("--iterations",  type=int,   default=20,
-                        help="Number of self-play→train iterations (default: 20)")
-    parser.add_argument("--games",       type=int,   default=25,
-                        help="Self-play games per iteration (default: 25)")
-    parser.add_argument("--sims",        type=int,   default=200,
+    parser.add_argument("--iterations",  type=int, default=20)
+    parser.add_argument("--games",       type=int, default=25,
+                        help="Games per iteration — all run in parallel (default: 25)")
+    parser.add_argument("--sims",        type=int, default=200,
                         help="MCTS simulations per move (default: 200)")
-    parser.add_argument("--buffer-size", type=int,   default=100_000,
-                        help="Replay buffer capacity in positions (default: 100000)")
-    parser.add_argument("--batch-size",  type=int,   default=256,
-                        help="Training batch size (default: 256)")
-    parser.add_argument("--n-batches",   type=int,   default=200,
-                        help="Training batches per iteration (default: 200)")
-    parser.add_argument("--checkpoint",  default=None,
-                        help="Resume from .pt checkpoint")
-    parser.add_argument("--output",      default="public/models/go-policy.onnx",
-                        help="ONNX output path")
+    parser.add_argument("--buffer-size", type=int, default=100_000)
+    parser.add_argument("--batch-size",  type=int, default=256)
+    parser.add_argument("--n-batches",   type=int, default=200)
+    parser.add_argument("--checkpoint",  default=None)
+    parser.add_argument("--output",      default="public/models/go-policy.onnx")
     parser.add_argument("--ckpt-dir",    default="scripts/igo/checkpoints")
     args = parser.parse_args()
 
@@ -439,7 +543,9 @@ def main():
         torch.device("cpu")
     )
     print(f"Device : {device}")
-    print(f"Sims/move: {args.sims}  Games/iter: {args.games}  Iterations: {args.iterations}")
+    print(f"Sims/move: {args.sims}  Games/iter: {args.games} (parallel)  Iterations: {args.iterations}")
+
+    _warmup_numba()
 
     model = GoNet(channels=64, blocks=5).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-4)
@@ -461,32 +567,22 @@ def main():
         print(f"  Iteration {it + 1}  |  buffer={len(buffer)}")
         print(f"{'='*60}")
 
-        # ── Self-play ────────────────────────────────────────────
+        # ── Self-play ────────────────────────────────────────────────────────
         model.eval()
         t0 = time.time()
-        black_wins = 0
-        for g in range(args.games):
-            samples, winner = self_play_game(model, device, args.sims)
-            buffer.extend(
-                (torch.from_numpy(f), torch.from_numpy(p), torch.tensor(z))
-                for f, p, z in samples
-            )
-            black_wins += (winner == 1)
-            elapsed = time.time() - t0
-            print(
-                f"  game {g+1:3d}/{args.games}  "
-                f"{'B' if winner==1 else 'W'} wins  "
-                f"positions={len(samples)//8}  "   # /8 because 8× augment
-                f"buffer={len(buffer)}  "
-                f"elapsed={elapsed:.0f}s",
-                end="\r",
-            )
-        print()
+        print(f"  Running {args.games} games in parallel...", flush=True)
+        samples, winners = parallel_self_play(model, device, args.games, args.sims)
+        buffer.extend(
+            (torch.from_numpy(f), torch.from_numpy(p), torch.tensor(z))
+            for f, p, z in samples
+        )
+        black_wins = sum(w == 1 for w in winners)
         play_time = time.time() - t0
         print(f"  Self-play done: {play_time:.0f}s  "
-              f"black_win_rate={black_wins/args.games:.0%}")
+              f"black_win_rate={black_wins/args.games:.0%}  "
+              f"positions={len(samples)//8}  buffer={len(buffer)}")
 
-        # ── Train ────────────────────────────────────────────────
+        # ── Train ────────────────────────────────────────────────────────────
         t1 = time.time()
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=args.n_batches
@@ -501,7 +597,7 @@ def main():
         else:
             print("  Train skipped (buffer too small)")
 
-        # ── Checkpoint + ONNX ────────────────────────────────────
+        # ── Checkpoint + ONNX ────────────────────────────────────────────────
         ckpt_path = ckpt_dir / f"iter_{it+1:03d}.pt"
         torch.save({"model": model.state_dict(),
                     "optimizer": optimizer.state_dict(),
