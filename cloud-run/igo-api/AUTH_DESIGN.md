@@ -40,7 +40,7 @@ gcloud iam workload-identity-pools create vercel-pool --location global --projec
 #### Vercel OIDC Providerを追加
 
 ```bash
-gcloud iam workload-identity-pools providers create-oidc vercel-provider --workload-identity-pool vercel-pool --location global --issuer-uri "https://oidc.vercel.com/shukubotas-projects" --attribute-mapping "google.subject=assertion.sub,attribute.environment=assertion.environment" --project $GOOGLE_CLOUD_PROJECT_ID
+gcloud iam workload-identity-pools providers create-oidc vercel-provider --workload-identity-pool vercel-pool --location global --issuer-uri "https://oidc.vercel.com/shukubotas-projects" --attribute-mapping "google.subject=assertion.sub,attribute.environment=assertion.environment" --allowed-audiences "https://vercel.com/YOUR_TEAM_SLUG" --project $GOOGLE_CLOUD_PROJECT_ID
 ```
 
 #### WIF → SAのバインディング
