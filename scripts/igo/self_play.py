@@ -309,10 +309,16 @@ class _Node:
 
 # ── Parallel self-play ───────────────────────────────────────────────────────
 
+RESIGN_THRESHOLD = 0.85  # resign if value < -RESIGN_THRESHOLD for RESIGN_WINDOW moves
+RESIGN_WINDOW     = 3
+MIN_RESIGN_MOVE   = 20
+MAX_MOVES         = BOARD * BOARD * 2  # 162 (typical 9x9 game is 60-80 moves)
+
+
 class _GameState:
     """State for one game in the parallel self-play pool."""
     __slots__ = ["board", "color", "prev_board", "history",
-                 "passes", "done", "winner", "move_num", "root"]
+                 "passes", "done", "winner", "move_num", "root", "consec_losing"]
 
     def __init__(self):
         self.board = np.zeros((BOARD, BOARD), dtype=np.int8)
@@ -324,6 +330,7 @@ class _GameState:
         self.winner = None
         self.move_num = 0
         self.root = _Node()
+        self.consec_losing = 0
 
 
 def parallel_self_play(model, device, n_games, n_sims,
@@ -444,6 +451,17 @@ def parallel_self_play(model, device, n_games, n_sims,
             else:
                 move = max(g.root.children, key=lambda m: g.root.children[m].visit_count)
 
+            # ── Resign check (current player's perspective) ───────────────────
+            v_root = g.root.q()
+            if g.move_num >= MIN_RESIGN_MOVE and v_root < -RESIGN_THRESHOLD:
+                g.consec_losing += 1
+                if g.consec_losing >= RESIGN_WINDOW:
+                    g.done = True
+                    g.winner = score_board(g.board)
+                    continue
+            else:
+                g.consec_losing = 0
+
             new_board = place_stone(g.board, *move, g.color)
             if new_board is None:
                 g.done = True
@@ -456,7 +474,7 @@ def parallel_self_play(model, device, n_games, n_sims,
             g.move_num += 1
             g.root = _Node()
 
-            if g.move_num >= BOARD * BOARD * 3:
+            if g.move_num >= MAX_MOVES:
                 g.done = True
                 g.winner = score_board(g.board)
 
