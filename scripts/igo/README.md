@@ -127,8 +127,8 @@ python scripts/igo/self_play.py --iterations 2 --games 5 --sims 50
 # 品質優先（強さ重視、時間がかかる）
 python scripts/igo/self_play.py --iterations 30 --games 50 --sims 400
 
-# 再開
-python scripts/igo/self_play.py --checkpoint scripts/igo/checkpoints/iter_010.pt
+# 再開（例: iter_020.pt から続きを学習する場合）
+python scripts/igo/self_play.py --iterations 30 --checkpoint scripts/igo/checkpoints/iter_020.pt
 ```
 
 | オプション | 説明 | デフォルト |
