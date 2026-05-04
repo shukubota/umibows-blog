@@ -28,8 +28,8 @@ const POS = TOPOLOGY.map((count, l) => {
 // ─── Random weight matrix ──────────────────────────────────────────────────
 const WEIGHTS = TOPOLOGY.slice(0, -1).map((fromN, l) =>
   Array.from({ length: fromN }, () =>
-    Array.from({ length: TOPOLOGY[l + 1] }, () => Math.random() * 2 - 1),
-  ),
+    Array.from({ length: TOPOLOGY[l + 1] }, () => Math.random() * 2 - 1)
+  )
 );
 
 // ─── Colour helpers ────────────────────────────────────────────────────────
@@ -107,8 +107,7 @@ function render(ctx: CanvasRenderingContext2D, state: SimState) {
         const { x: x1, y: y1 } = POS[l][i];
         const { x: x2, y: y2 } = POS[l + 1][j];
         const alpha = 0.04 + Math.abs(w) * 0.18;
-        ctx.strokeStyle =
-          w > 0 ? `rgba(80,130,255,${alpha})` : `rgba(255,80,110,${alpha})`;
+        ctx.strokeStyle = w > 0 ? `rgba(80,130,255,${alpha})` : `rgba(255,80,110,${alpha})`;
         ctx.lineWidth = Math.abs(w) * 1.8 + 0.3;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
@@ -173,7 +172,7 @@ function render(ctx: CanvasRenderingContext2D, state: SimState) {
       const fill = ctx.createRadialGradient(x - 5, y - 6, 0, x, y, NODE_R);
       fill.addColorStop(
         0,
-        `rgba(${Math.min(255, r * act + 45)},${Math.min(255, g * act + 45)},${Math.min(255, b * act + 60)},1)`,
+        `rgba(${Math.min(255, r * act + 45)},${Math.min(255, g * act + 45)},${Math.min(255, b * act + 60)},1)`
       );
       fill.addColorStop(1, "rgba(10,10,30,1)");
       ctx.beginPath();
@@ -309,17 +308,11 @@ export default function NeuralNetViz() {
             const dn = p.to;
 
             // Fire destination node
-            state.activations[dl][dn] = Math.min(
-              1.0,
-              state.activations[dl][dn] + 0.8,
-            );
+            state.activations[dl][dn] = Math.min(1.0, state.activations[dl][dn] + 0.8);
 
             // Cascade forward (debounced per node)
             const debounce = spawnInterval * 0.75;
-            if (
-              dl < TOPOLOGY.length - 1 &&
-              state.time - state.lastFire[dl][dn] > debounce
-            ) {
+            if (dl < TOPOLOGY.length - 1 && state.time - state.lastFire[dl][dn] > debounce) {
               state.lastFire[dl][dn] = state.time;
               for (let j = 0; j < TOPOLOGY[dl + 1]; j++) {
                 born.push({
@@ -419,7 +412,12 @@ export default function NeuralNetViz() {
           maxWidth: "100%",
         }}
       >
-        <canvas ref={canvasRef} width={W} height={H} style={{ display: "block", maxWidth: "100%" }} />
+        <canvas
+          ref={canvasRef}
+          width={W}
+          height={H}
+          style={{ display: "block", maxWidth: "100%" }}
+        />
       </motion.div>
 
       {/* Controls */}
@@ -459,9 +457,7 @@ export default function NeuralNetViz() {
             fontSize: 14,
             fontWeight: 700,
             letterSpacing: 1,
-            boxShadow: isRunning
-              ? "0 0 20px rgba(255,70,90,0.3)"
-              : "0 0 20px rgba(60,110,255,0.3)",
+            boxShadow: isRunning ? "0 0 20px rgba(255,70,90,0.3)" : "0 0 20px rgba(60,110,255,0.3)",
             fontFamily: "inherit",
             transition: "background 0.25s, box-shadow 0.25s",
           }}
