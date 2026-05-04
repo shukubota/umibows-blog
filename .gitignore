@@ -54,4 +54,4 @@ public/models/*
 scripts/igo/checkpoints/*
 !scripts/igo/checkpoints/kgs_pretrain.pt
 !scripts/igo/checkpoints/iter_020.pt
-scripts/igo/__pycache__/
+scripts/igo/__pycache__/package-lock.json
