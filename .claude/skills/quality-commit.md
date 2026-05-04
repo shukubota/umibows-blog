@@ -3,6 +3,7 @@
 **Skill Name**: `quality-commit`
 
 ## Description
+
 Automatically runs Prettier formatting, ESLint checks, and security scanning before committing code to ensure consistent code quality and security across the repository.
 
 ## Workflow
@@ -17,6 +18,7 @@ Automatically runs Prettier formatting, ESLint checks, and security scanning bef
 ## Usage
 
 Invoke this skill when you want to commit code with automatic quality and security checks:
+
 - "quality commit"
 - "secure commit"
 - "commit with checks"
@@ -26,6 +28,7 @@ Invoke this skill when you want to commit code with automatic quality and securi
 ## Security Checks
 
 Scans for the following sensitive patterns:
+
 - **API Keys**: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `AWS_ACCESS_KEY`, etc.
 - **Tokens**: JWT tokens, OAuth tokens, GitHub tokens
 - **Passwords**: Hardcoded passwords and credentials

@@ -16,9 +16,9 @@ export function boardToFeatures(grid: Grid, color: StoneColor): Float32Array {
     for (let c = 0; c < BOARD_SIZE; c++) {
       const i = r * BOARD_SIZE + c;
       const cell = grid[r][c];
-      data[0 * cells + i] = cell === color ? 1 : 0;   // own
-      data[1 * cells + i] = cell === opp ? 1 : 0;      // opponent
-      data[2 * cells + i] = cell === "empty" ? 1 : 0;  // empty
+      data[0 * cells + i] = cell === color ? 1 : 0; // own
+      data[1 * cells + i] = cell === opp ? 1 : 0; // opponent
+      data[2 * cells + i] = cell === "empty" ? 1 : 0; // empty
       data[3 * cells + i] = color === "black" ? 1 : 0; // black-to-move
     }
   }

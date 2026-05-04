@@ -20,7 +20,12 @@ async function getSession() {
   const ort = await import("onnxruntime-node");
   console.log("[igo/NN] onnxruntime-node imported, creating session...");
   session = await ort.InferenceSession.create(MODEL_PATH);
-  console.log("[igo/NN] session created. input names:", session.inputNames, "output names:", session.outputNames);
+  console.log(
+    "[igo/NN] session created. input names:",
+    session.inputNames,
+    "output names:",
+    session.outputNames
+  );
   return session;
 }
 
@@ -52,12 +57,7 @@ export async function computeCpuMoveNN(
 
   const ort = await import("onnxruntime-node");
   const featureData = boardToFeatures(grid, color);
-  const inputTensor = new ort.Tensor("float32", featureData, [
-    1,
-    N_PLANES,
-    BOARD_SIZE,
-    BOARD_SIZE,
-  ]);
+  const inputTensor = new ort.Tensor("float32", featureData, [1, N_PLANES, BOARD_SIZE, BOARD_SIZE]);
 
   console.log("[igo/NN] running inference, legal moves:", legalMoves.length);
   const output = await sess.run({ input: inputTensor });
@@ -85,14 +85,14 @@ export async function computeCpuMoveNN(
     .slice(0, 3);
   console.log(
     "[igo/NN+MCTS] top priors:",
-    top3.map((s) => `(${s.move.row},${s.move.col})=${(s.prior * 100).toFixed(1)}%`).join(" | "),
+    top3.map((s) => `(${s.move.row},${s.move.col})=${(s.prior * 100).toFixed(1)}%`).join(" | ")
   );
 
   // PUCT-MCTS guided by NN priors
   const t0 = Date.now();
   const bestMove = puctMcts(grid, color, previousGrid, priors, 800);
   console.log(
-    `[igo/NN+MCTS] chosen: ${bestMove ? `(${bestMove.row},${bestMove.col})` : "null"} in ${Date.now() - t0}ms`,
+    `[igo/NN+MCTS] chosen: ${bestMove ? `(${bestMove.row},${bestMove.col})` : "null"} in ${Date.now() - t0}ms`
   );
 
   return bestMove;

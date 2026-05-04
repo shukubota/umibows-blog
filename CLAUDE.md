@@ -34,17 +34,20 @@ Required environment variables:
 ## Architecture Patterns
 
 ### AI Integration
+
 - **Server Actions**: AI API calls are implemented as Next.js server actions (see `app/tex/actions.ts`)
 - **Multiple AI Providers**: Uses both Anthropic Claude and Google Generative AI for different features
 - **Image-to-LaTeX**: Handwriting recognition converts images to LaTeX expressions using Claude's vision capabilities
 
 ### Interactive Visualizations
+
 - **Canvas-based**: Mathematical simulations use HTML5 Canvas with React refs
 - **Real-time Controls**: Interactive parameters update visualizations using React state
 - **Animation Loop**: Uses `requestAnimationFrame` for smooth 60fps animations
 - **Physics Simulations**: Implements numerical methods (RK4) for differential equations
 
 ### Code Organization
+
 - **Page Components**: Each app route contains self-contained interactive applications
 - **Shared Components**: Reusable UI components in `/components/`
 - **Custom Hooks**: Application-specific logic in `/hooks/`
@@ -79,12 +82,14 @@ Required environment variables:
 ## Code Style
 
 ### Formatting
+
 - **Prettier**: Configured with 2-space indentation, 100-character line width
 - **ESLint**: Integrated with Prettier for code quality
 - **Double Quotes**: Preferred for string literals
 - **Trailing Commas**: ES5 standard
 
 ### Development Patterns
+
 - Use TypeScript interfaces for complex data structures
 - Implement responsive design with Tailwind CSS breakpoints
 - Use functional components with hooks exclusively
@@ -94,6 +99,7 @@ Required environment variables:
 ## Development Workflow Guidelines
 
 ### Git Operations
+
 - **Never automatically commit or push** changes after file modifications
 - **Only execute git operations** when explicitly requested by user with commands like:
   - "commit" - Create commit only
@@ -104,6 +110,7 @@ Required environment variables:
 - **Report status only** after completing file changes, do not auto-commit
 
 ### Code Modifications
+
 - **Complete requested changes first**, then wait for git instructions
 - **Stage related files together** when creating commits
 - **Include meaningful commit messages** that explain the why, not just the what

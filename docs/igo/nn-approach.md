@@ -2,12 +2,12 @@
 
 ## なぜNN方式か
 
-| | MCTS（ランダムロールアウト） | NN方式 |
-|---|---|---|
-| 速度 | 1〜5秒/手 | 数十〜数百ms/手 |
-| 強さの上限 | 10kyu程度（ロールアウトの質に依存） | モデル次第で段位クラス |
-| 理解 | 地の概念・死活を理解しない | 事前学習で戦略を内包 |
-| 学習 | しない（毎回ゼロから探索） | オフラインで学習済み → 推論のみ |
+|            | MCTS（ランダムロールアウト）        | NN方式                          |
+| ---------- | ----------------------------------- | ------------------------------- |
+| 速度       | 1〜5秒/手                           | 数十〜数百ms/手                 |
+| 強さの上限 | 10kyu程度（ロールアウトの質に依存） | モデル次第で段位クラス          |
+| 理解       | 地の概念・死活を理解しない          | 事前学習で戦略を内包            |
+| 学習       | しない（毎回ゼロから探索）          | オフラインで学習済み → 推論のみ |
 
 ---
 
@@ -38,12 +38,12 @@ Next.js Server Action（Node.js）
 npm install onnxruntime-node
 ```
 
-| 選択肢 | 判断 |
-|---|---|
-| **onnxruntime-node** ✅ | Node.jsネイティブ実行。ブラウザWASMより高速。Server Actionで動く |
+| 選択肢                          | 判断                                                                    |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| **onnxruntime-node** ✅         | Node.jsネイティブ実行。ブラウザWASMより高速。Server Actionで動く        |
 | onnxruntime-web（ブラウザWASM） | 遅い・Web Worker実装が複雑・30〜100MBをブラウザに配信する必要あり。却下 |
-| TensorFlow.js | KataGo変換モデルが古く未メンテ。却下 |
-| KataGo バイナリ直接実行 | Vercelでは subprocess 不可。却下 |
+| TensorFlow.js                   | KataGo変換モデルが古く未メンテ。却下                                    |
+| KataGo バイナリ直接実行         | Vercelでは subprocess 不可。却下                                        |
 
 ### モデル形式: ONNX
 
@@ -75,14 +75,14 @@ KataGoのONNX変換済みモデルが Hugging Face で公開されている（`k
 
 KataGo標準の主要プレーン（最小構成）:
 
-| プレーン | 内容 |
-|---|---|
-| 0 | 自分の石がある交点（1/0） |
-| 1 | 相手の石がある交点（1/0） |
-| 2 | コウが発生している交点 |
-| 3〜7 | 自分の連のダメ数（1〜5以上を各プレーンに） |
-| 8〜12 | 相手の連のダメ数 |
-| 13 | 手番（全1=黒番 / 全0=白番） |
+| プレーン | 内容                                       |
+| -------- | ------------------------------------------ |
+| 0        | 自分の石がある交点（1/0）                  |
+| 1        | 相手の石がある交点（1/0）                  |
+| 2        | コウが発生している交点                     |
+| 3〜7     | 自分の連のダメ数（1〜5以上を各プレーンに） |
+| 8〜12    | 相手の連のダメ数                           |
+| 13       | 手番（全1=黒番 / 全0=白番）                |
 
 実装時は `katago-onnx` のPythonコードを参考にTypeScriptへ移植する。  
 モデルの実際の入力仕様は Netron で確認すること。
@@ -153,7 +153,15 @@ export async function computeCpuMoveNN(
 ```typescript
 // hooks/go/board-features.ts
 import * as ort from "onnxruntime-node";
-import { Grid, StoneColor, Point, getNeighbors, findGroup, countLiberties, opponent } from "./engine";
+import {
+  Grid,
+  StoneColor,
+  Point,
+  getNeighbors,
+  findGroup,
+  countLiberties,
+  opponent,
+} from "./engine";
 
 const BOARD_SIZE = 9;
 const NUM_PLANES = 14;
@@ -217,8 +225,21 @@ useEffect(() => {
         if (!cpuMove) {
           // パス処理（既存ロジックと同じ）
           const newPassCount = prev.passCount + 1;
-          if (newPassCount >= 2) return { ...prev, passCount: newPassCount, gamePhase: "scoring", currentTurn: PLAYER_COLOR, isCpuThinking: false };
-          return { ...prev, passCount: newPassCount, currentTurn: PLAYER_COLOR, lastMove: null, isCpuThinking: false };
+          if (newPassCount >= 2)
+            return {
+              ...prev,
+              passCount: newPassCount,
+              gamePhase: "scoring",
+              currentTurn: PLAYER_COLOR,
+              isCpuThinking: false,
+            };
+          return {
+            ...prev,
+            passCount: newPassCount,
+            currentTurn: PLAYER_COLOR,
+            lastMove: null,
+            isCpuThinking: false,
+          };
         }
         const { nextGrid, captured } = applyMove(prev.grid, cpuMove, CPU_COLOR);
         return {
@@ -265,13 +286,13 @@ hooks/
 
 ## Vercel での動作
 
-| 項目 | 詳細 |
-|---|---|
-| モデルキャッシュ | `/tmp`（512MB）に初回ダウンロード後キャッシュ |
-| コールドスタート | 初回 or インスタンス再起動後のみ遅延（30〜100MBのDL）|
-| 実行時間上限 | Hobby: 10秒 / Pro: 60秒（初回DL込みで Pro 推奨）|
-| バンドルサイズ | `onnxruntime-node` 自体は小さい。モデルは `/tmp` に置くので問題なし |
-| ブラウザへの配信 | モデルファイルを送らないのでページロードは速い |
+| 項目             | 詳細                                                                |
+| ---------------- | ------------------------------------------------------------------- |
+| モデルキャッシュ | `/tmp`（512MB）に初回ダウンロード後キャッシュ                       |
+| コールドスタート | 初回 or インスタンス再起動後のみ遅延（30〜100MBのDL）               |
+| 実行時間上限     | Hobby: 10秒 / Pro: 60秒（初回DL込みで Pro 推奨）                    |
+| バンドルサイズ   | `onnxruntime-node` 自体は小さい。モデルは `/tmp` に置くので問題なし |
+| ブラウザへの配信 | モデルファイルを送らないのでページロードは速い                      |
 
 ### コールドスタート対策
 
@@ -330,13 +351,13 @@ useEffect(() => {
 
 ## リスクと対策
 
-| リスク | 対策 |
-|---|---|
-| Vercel Hobby プランで初回タイムアウト | Pro プランへ移行 or モデルを小さくする |
-| KataGoの入力特徴量実装が難しい | Netron でモデルの入力を確認してから実装。まず3プレーン（自石/相手石/空点）だけで試す |
-| Hugging Face からのDLが遅い | モデルを小さくする or Vercel Blob Storage に移行 |
-| モデルの強さが期待以下 | より大きいモデルに差し替え（コードは変えない） |
-| `onnxruntime-node` の native binding がVercelで動かない | `onnxruntime-web` の Node.js モード（WASM）にフォールバック |
+| リスク                                                  | 対策                                                                                 |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Vercel Hobby プランで初回タイムアウト                   | Pro プランへ移行 or モデルを小さくする                                               |
+| KataGoの入力特徴量実装が難しい                          | Netron でモデルの入力を確認してから実装。まず3プレーン（自石/相手石/空点）だけで試す |
+| Hugging Face からのDLが遅い                             | モデルを小さくする or Vercel Blob Storage に移行                                     |
+| モデルの強さが期待以下                                  | より大きいモデルに差し替え（コードは変えない）                                       |
+| `onnxruntime-node` の native binding がVercelで動かない | `onnxruntime-web` の Node.js モード（WASM）にフォールバック                          |
 
 ---
 

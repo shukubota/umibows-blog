@@ -34,7 +34,7 @@ function makeNode(
   grid: Grid,
   previousGrid: Grid | null,
   parent: PuctNode | null,
-  movePriors?: Map<string, number>,
+  movePriors?: Map<string, number>
 ): PuctNode {
   const nextColor = opponent(color);
   const legal = getAllLegalMoves(grid, nextColor, previousGrid);
@@ -42,11 +42,22 @@ function makeNode(
   const untried = legal
     .map((p) => ({ point: p, prior: movePriors?.get(pointKey(p)) ?? uniform }))
     .sort((a, b) => b.prior - a.prior);
-  return { point, color, grid, previousGrid, wins: 0, visits: 0, prior, children: [], untriedMoves: untried, parent };
+  return {
+    point,
+    color,
+    grid,
+    previousGrid,
+    wins: 0,
+    visits: 0,
+    prior,
+    children: [],
+    untriedMoves: untried,
+    parent,
+  };
 }
 
 function puctScore(child: PuctNode, parentVisits: number): number {
-  const u = C_PUCT * child.prior * Math.sqrt(parentVisits) / (1 + child.visits);
+  const u = (C_PUCT * child.prior * Math.sqrt(parentVisits)) / (1 + child.visits);
   if (child.visits === 0) return u;
   return child.wins / child.visits + u;
 }
@@ -55,7 +66,7 @@ function select(root: PuctNode): PuctNode {
   let node = root;
   while (node.untriedMoves.length === 0 && node.children.length > 0) {
     node = node.children.reduce((best, c) =>
-      puctScore(c, node.visits) > puctScore(best, node.visits) ? c : best,
+      puctScore(c, node.visits) > puctScore(best, node.visits) ? c : best
     );
   }
   return node;
@@ -134,7 +145,7 @@ export function puctMcts(
   color: StoneColor,
   previousGrid: Grid | null,
   priors: Map<string, number>,
-  iterations = 800,
+  iterations = 800
 ): Point | null {
   const root = makeNode(null, 1, opponent(color), grid, previousGrid, null, priors);
   for (let i = 0; i < iterations; i++) {

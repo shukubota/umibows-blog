@@ -80,13 +80,13 @@ RAVE-UCT スコア:
 
 ```typescript
 interface MctsNode {
-  point: Point | null;       // null = パス
+  point: Point | null; // null = パス
   color: StoneColor;
   grid: Grid;
   previousGrid: Grid | null;
   wins: number;
   visits: number;
-  amafWins: Map<string, number>;   // RAVE: 手ごとの勝利数
+  amafWins: Map<string, number>; // RAVE: 手ごとの勝利数
   amafVisits: Map<string, number>; // RAVE: 手ごとの試行数
   children: MctsNode[];
   untriedMoves: (Point | null)[];
@@ -134,11 +134,7 @@ function rollout(node: MctsNode, cpuColor: StoneColor): { winner: StoneColor; pl
   return { winner: evaluateWinner(grid), played };
 }
 
-function backpropagate(
-  node: MctsNode | null,
-  winner: StoneColor,
-  played: string[]
-) {
+function backpropagate(node: MctsNode | null, winner: StoneColor, played: string[]) {
   while (node !== null) {
     node.visits++;
     if (node.color === winner) node.wins++;
@@ -162,11 +158,7 @@ function backpropagate(
 完全ランダムより優先順位をつけるだけで強さが上がる:
 
 ```typescript
-function heuristicPlayoutMove(
-  grid: Grid,
-  color: StoneColor,
-  prev: Grid | null
-): Point | null {
+function heuristicPlayoutMove(grid: Grid, color: StoneColor, prev: Grid | null): Point | null {
   const legal = getAllLegalMoves(grid, color, prev);
   if (legal.length === 0) return null;
 
@@ -218,12 +210,12 @@ self.onmessage = (e: MessageEvent) => {
 
 ### Step 1 のパラメータ目安
 
-| 項目 | 推奨値 |
-|---|---|
-| iterations | 2000〜5000 |
+| 項目          | 推奨値             |
+| ------------- | ------------------ |
+| iterations    | 2000〜5000         |
 | C（探索係数） | √2（調整は実戦で） |
-| RAVE_K | 500 |
-| rollout上限 | `BOARD_SIZE² × 3` |
+| RAVE_K        | 500                |
+| rollout上限   | `BOARD_SIZE² × 3`  |
 
 ---
 
@@ -259,7 +251,7 @@ import * as tf from "@tensorflow/tfjs";
 const model = await tf.loadGraphModel("/models/go-policy/model.json");
 
 function getPolicyDistribution(grid: Grid, color: StoneColor): Float32Array {
-  const input = tf.tensor4d([boardToFeatures(grid, color)]);  // [1, 9, 9, channels]
+  const input = tf.tensor4d([boardToFeatures(grid, color)]); // [1, 9, 9, channels]
   const output = model.predict(input) as tf.Tensor;
   const probs = output.dataSync() as Float32Array; // 長さ82（81交点 + パス）
   input.dispose();
@@ -282,19 +274,19 @@ function expand(node: MctsNode, policy: Float32Array): MctsNode {
 
 ### モデルの選択肢
 
-| 選択肢 | 強さ目安 | 入手方法 |
-|---|---|---|
-| web-katrain の軽量KataGoモデル | 5〜7段 | GitHub (Sir-Teo/web-katrain) からTF.js変換済みを取得 |
-| 既存の小型Goポリシーネット | 2〜4段 | オープンソースのTF.js対応モデルを探す |
-| 自前学習 | 自由 | GPU + 棋譜データが必要（このPJの範囲外） |
+| 選択肢                         | 強さ目安 | 入手方法                                             |
+| ------------------------------ | -------- | ---------------------------------------------------- |
+| web-katrain の軽量KataGoモデル | 5〜7段   | GitHub (Sir-Teo/web-katrain) からTF.js変換済みを取得 |
+| 既存の小型Goポリシーネット     | 2〜4段   | オープンソースのTF.js対応モデルを探す                |
+| 自前学習                       | 自由     | GPU + 棋譜データが必要（このPJの範囲外）             |
 
 ### 懸念点と対策
 
-| 懸念 | 対策 |
-|---|---|
+| 懸念                             | 対策                                                                        |
+| -------------------------------- | --------------------------------------------------------------------------- |
 | 重みファイルが大きい（10〜50MB） | Vercelの `public/` に置いてCDNキャッシュ / 初回ロード中はStep 1のMCTSで代替 |
-| 推論が遅い | WebGPUバックエンドを使う（Chrome対応済み、Safariは限定的） |
-| モデル変換が必要 | web-katrain がTF.js形式の変換済みモデルを公開している |
+| 推論が遅い                       | WebGPUバックエンドを使う（Chrome対応済み、Safariは限定的）                  |
+| モデル変換が必要                 | web-katrain がTF.js形式の変換済みモデルを公開している                       |
 
 ---
 

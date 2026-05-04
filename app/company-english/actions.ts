@@ -52,7 +52,7 @@ async function researchNode(state: typeof GraphState.State) {
 - Company size and key departments
 - Notable characteristics or reputation
 
-Respond in 2-3 plain text paragraphs. Do not use markdown formatting, bullet points, or headers.`,
+Respond in 2-3 plain text paragraphs. Do not use markdown formatting, bullet points, or headers.`
   );
   return { companyInfo };
 }
@@ -71,7 +71,7 @@ Respond ONLY with a JSON array, no other text:
     "role": "Job Title",
     "background": "Brief background (1-2 sentences about their experience and personality)"
   }
-]`,
+]`
   );
   const jsonMatch = content.match(/\[[\s\S]*\]/);
   const members: MemberProfile[] = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
@@ -103,7 +103,7 @@ Respond ONLY with a JSON array, no other text:
     "sampleAnswer": "How this person would likely respond (1-3 sentences, in first person)",
     "followUpQuestion": "A natural follow-up question based on their answer"
   }
-]`,
+]`
   );
   const jsonMatch = content.match(/\[[\s\S]*\]/);
   const qaList: QAItem[] = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
