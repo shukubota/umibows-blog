@@ -210,11 +210,7 @@ function rollout(node: MctsNode): { winner: StoneColor; playedKeys: Set<string> 
   return { winner: evaluateWinner(grid), playedKeys };
 }
 
-function backpropagate(
-  node: MctsNode | null,
-  winner: StoneColor,
-  playedKeys: Set<string>
-): void {
+function backpropagate(node: MctsNode | null, winner: StoneColor, playedKeys: Set<string>): void {
   while (node !== null) {
     node.visits++;
     if (node.color === winner) node.wins++;

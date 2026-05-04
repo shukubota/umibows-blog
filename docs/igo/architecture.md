@@ -65,7 +65,7 @@ export type CellState = StoneColor | "empty";
 export type GamePhase = "playing" | "scoring" | "finished";
 export type TerritoryCell = StoneColor | "neutral";
 
-export type Grid = CellState[][];  // [row][col], 0-indexed, 9×9
+export type Grid = CellState[][]; // [row][col], 0-indexed, 9×9
 
 export interface Point {
   row: number;
@@ -73,18 +73,18 @@ export interface Point {
 }
 
 export interface Prisoners {
-  black: number;  // 黒が取った石の数（＝白の石）
-  white: number;  // 白が取った石の数（＝黒の石）
+  black: number; // 黒が取った石の数（＝白の石）
+  white: number; // 白が取った石の数（＝黒の石）
 }
 
 export interface GameState {
   grid: Grid;
-  previousGrid: Grid | null;   // コウ判定用（1手前の盤面）
+  previousGrid: Grid | null; // コウ判定用（1手前の盤面）
   currentTurn: StoneColor;
   prisoners: Prisoners;
   passCount: number;
   gamePhase: GamePhase;
-  markedDead: Set<string>;     // `${row},${col}` 形式
+  markedDead: Set<string>; // `${row},${col}` 形式
   komi: number;
 }
 
@@ -114,14 +114,18 @@ const KOMI = 6.5;
 
 // 9路盤の星（0-indexed）
 const STAR_POINTS: Point[] = [
-  { row: 2, col: 2 }, { row: 2, col: 6 },
+  { row: 2, col: 2 },
+  { row: 2, col: 6 },
   { row: 4, col: 4 },
-  { row: 6, col: 2 }, { row: 6, col: 6 },
+  { row: 6, col: 2 },
+  { row: 6, col: 6 },
 ];
 
 const DIRS: Point[] = [
-  { row: -1, col: 0 }, { row: 1, col: 0 },
-  { row: 0, col: -1 }, { row: 0, col: 1 },
+  { row: -1, col: 0 },
+  { row: 1, col: 0 },
+  { row: 0, col: -1 },
+  { row: 0, col: 1 },
 ];
 ```
 
@@ -129,10 +133,10 @@ const DIRS: Point[] = [
 
 ```typescript
 // 同色の連を BFS で探索して返す
-function findGroup(grid: Grid, start: Point): Point[]
+function findGroup(grid: Grid, start: Point): Point[];
 
 // 連に隣接する空点（ダメ）の数を返す
-function countLiberties(grid: Grid, group: Point[]): number
+function countLiberties(grid: Grid, group: Point[]): number;
 ```
 
 ### 合法手判定
@@ -140,16 +144,21 @@ function countLiberties(grid: Grid, group: Point[]): number
 ```typescript
 // 着手が合法かどうかを判定する
 // 判定順序: 空点 → 仮置き → 相手石捕獲 → 自殺手チェック → コウチェック
-function isLegalMove(grid: Grid, point: Point, color: StoneColor, previousGrid: Grid | null): boolean
+function isLegalMove(
+  grid: Grid,
+  point: Point,
+  color: StoneColor,
+  previousGrid: Grid | null
+): boolean;
 
 // 着手後に取れる相手グループを全て返す
-function getCapturedGroups(grid: Grid, point: Point, color: StoneColor): Point[][]
+function getCapturedGroups(grid: Grid, point: Point, color: StoneColor): Point[][];
 
 // 自殺手判定（相手石を取らず自連のダメ=0）
-function isSuicide(grid: Grid, point: Point, color: StoneColor): boolean
+function isSuicide(grid: Grid, point: Point, color: StoneColor): boolean;
 
 // コウ判定（着手後の盤面 === 1手前の盤面）
-function isKoViolation(nextGrid: Grid, previousGrid: Grid | null): boolean
+function isKoViolation(nextGrid: Grid, previousGrid: Grid | null): boolean;
 ```
 
 ### 着手の適用
@@ -157,7 +166,11 @@ function isKoViolation(nextGrid: Grid, previousGrid: Grid | null): boolean
 ```typescript
 // 石を置いて捕獲処理を行い、新しい盤面と取り石数を返す
 // 処理順序: 置く → 相手グループのダメ確認 → 0なら除去 → 取り石数を返す
-function applyMove(grid: Grid, point: Point, color: StoneColor): { nextGrid: Grid; captured: number }
+function applyMove(
+  grid: Grid,
+  point: Point,
+  color: StoneColor
+): { nextGrid: Grid; captured: number };
 ```
 
 ### 地計算
@@ -165,7 +178,10 @@ function applyMove(grid: Grid, point: Point, color: StoneColor): { nextGrid: Gri
 ```typescript
 // 全空領域を BFS で探索し、帰属色を判定する
 // 片方の色のみに接する → その色の地 / 両色に接する → neutral
-function identifyTerritory(grid: Grid): { territoryGrid: TerritoryCell[][]; score: { black: number; white: number } }
+function identifyTerritory(grid: Grid): {
+  territoryGrid: TerritoryCell[][];
+  score: { black: number; white: number };
+};
 
 // 終局スコアを計算する
 // 計算式（日本式）:
@@ -177,17 +193,22 @@ function identifyTerritory(grid: Grid): { territoryGrid: TerritoryCell[][]; scor
 // ※ scoringGrid は markedDead を除去済みの盤面。
 //   死石除去後の空点は identifyTerritory で自動的に相手の地に加算される。
 // ※ komi = 6.5 のため引き分けは発生しない。
-function calcFinalScore(grid: Grid, prisoners: Prisoners, markedDead: Set<string>, komi: number): FinalScore
+function calcFinalScore(
+  grid: Grid,
+  prisoners: Prisoners,
+  markedDead: Set<string>,
+  komi: number
+): FinalScore;
 ```
 
 ### ユーティリティ
 
 ```typescript
-function cloneGrid(grid: Grid): Grid
-function gridsEqual(a: Grid, b: Grid): boolean
-function pointKey(p: Point): string          // "${row},${col}"
-function opponent(color: StoneColor): StoneColor
-function getNeighbors(p: Point): Point[]     // BOARD_SIZE で盤外を除く
+function cloneGrid(grid: Grid): Grid;
+function gridsEqual(a: Grid, b: Grid): boolean;
+function pointKey(p: Point): string; // "${row},${col}"
+function opponent(color: StoneColor): StoneColor;
+function getNeighbors(p: Point): Point[]; // BOARD_SIZE で盤外を除く
 ```
 
 ---
@@ -206,7 +227,7 @@ export interface UseGoGameReturn {
   isLegal: (point: Point) => boolean;
 }
 
-export function useGoGame(): UseGoGameReturn
+export function useGoGame(): UseGoGameReturn;
 ```
 
 ### フェーズ遷移
@@ -235,7 +256,8 @@ finished
 
 ```typescript
 const Igo = () => {
-  const { state, finalScore, placeStone, pass, toggleDeadStone, confirmScore, resetGame, isLegal } = useGoGame();
+  const { state, finalScore, placeStone, pass, toggleDeadStone, confirmScore, resetGame, isLegal } =
+    useGoGame();
   // phase に応じて onPointClick を切り替える
   const handlePointClick = (point: Point) => {
     if (state.gamePhase === "playing") placeStone(point);
@@ -270,7 +292,7 @@ interface StoneProps {
   color: StoneColor;
   row: number;
   col: number;
-  dimmed?: boolean;  // 死石マーキング時に半透明
+  dimmed?: boolean; // 死石マーキング時に半透明
 }
 ```
 
@@ -296,11 +318,11 @@ interface GameControlsProps {
 }
 ```
 
-| フェーズ | 表示 |
-|---------|------|
-| playing | パスボタン + リセットボタン |
-| scoring | 「スコア確定」ボタン + リセットボタン |
-| finished | リセットボタンのみ |
+| フェーズ | 表示                                  |
+| -------- | ------------------------------------- |
+| playing  | パスボタン + リセットボタン           |
+| scoring  | 「スコア確定」ボタン + リセットボタン |
+| finished | リセットボタンのみ                    |
 
 ### `ScoreBoard.tsx`
 
@@ -382,10 +404,10 @@ confirmScore()
 
 ## 実装順序
 
-| ステップ | 内容 |
-|---------|------|
-| 1 | `hooks/useGoGame.ts` を作成（型定義 → エンジン関数 → フック） |
-| 2 | `Board.tsx` を刷新（盤線・星・ラベルを Board 内部に移動） |
-| 3 | `GameControls.tsx`, `ScoreBoard.tsx` を実装 |
-| 4 | `igo.tsx` を刷新（useGoGame + 新コンポーネントに切り替え） |
-| 5 | `GameResult.tsx` を実装 |
+| ステップ | 内容                                                          |
+| -------- | ------------------------------------------------------------- |
+| 1        | `hooks/useGoGame.ts` を作成（型定義 → エンジン関数 → フック） |
+| 2        | `Board.tsx` を刷新（盤線・星・ラベルを Board 内部に移動）     |
+| 3        | `GameControls.tsx`, `ScoreBoard.tsx` を実装                   |
+| 4        | `igo.tsx` を刷新（useGoGame + 新コンポーネントに切り替え）    |
+| 5        | `GameResult.tsx` を実装                                       |

@@ -37,11 +37,11 @@ python3 scripts/igo/download_kgs_9x9.py \
   --workers 12
 ```
 
-| オプション | 説明 | デフォルト |
-|---|---|---|
-| `--output` | 保存先ディレクトリ | `~/kgs-sgf/` |
-| `--months` | 何ヶ月分遡って取得するか | 24 |
-| `--workers` | 並列ダウンロード数 | 8 |
+| オプション  | 説明                     | デフォルト   |
+| ----------- | ------------------------ | ------------ |
+| `--output`  | 保存先ディレクトリ       | `~/kgs-sgf/` |
+| `--months`  | 何ヶ月分遡って取得するか | 24           |
+| `--workers` | 並列ダウンロード数       | 8            |
 
 **仕組み**: `gokgs.com/servlet/archives/` からユーザー別月次 zip を取得し、  
 `SZ[9]` を含む 9x9 棋譜だけを抽出して保存する。  
@@ -69,12 +69,12 @@ python3 scripts/igo/train_go_policy.py \
 > `python3` が pyenv の 3.11.9 を指していない場合は  
 > `~/.pyenv/versions/3.11.9/bin/python3` で直接実行する。
 
-| オプション | 説明 | デフォルト |
-|---|---|---|
-| `--data` | SGF ファイルのルートディレクトリ | 必須 |
-| `--epochs` | 学習エポック数 | 10 |
-| `--max-games` | 読み込む最大局数 | 50000 |
-| `--output` | ONNX 出力先 | `public/models/go-policy.onnx` |
+| オプション    | 説明                             | デフォルト                     |
+| ------------- | -------------------------------- | ------------------------------ |
+| `--data`      | SGF ファイルのルートディレクトリ | 必須                           |
+| `--epochs`    | 学習エポック数                   | 10                             |
+| `--max-games` | 読み込む最大局数                 | 50000                          |
+| `--output`    | ONNX 出力先                      | `public/models/go-policy.onnx` |
 
 **目安の所要時間（M1/M2 Mac）:** 3 万局 × 10 エポックで 20〜40 分程度。  
 KGS から収集できる 9x9 棋譜は数百局規模が現実的。その場合でも数分で学習が完了し、1〜2 MB の ONNX モデルが出力される。
@@ -131,22 +131,22 @@ python scripts/igo/self_play.py --iterations 30 --games 50 --sims 400
 python scripts/igo/self_play.py --iterations 30 --checkpoint scripts/igo/checkpoints/iter_020.pt
 ```
 
-| オプション | 説明 | デフォルト |
-|---|---|---|
-| `--iterations` | 自己対戦→学習のループ回数 | 20 |
-| `--games` | 1 イテレーション当たりの対局数 | 25 |
-| `--sims` | 1 手当たりの MCTS シミュレーション数 | 200 |
-| `--buffer-size` | リプレイバッファ容量（局面数） | 100000 |
-| `--checkpoint` | 再開するチェックポイント `.pt` | なし |
-| `--output` | ONNX 出力先 | `public/models/go-policy.onnx` |
+| オプション      | 説明                                 | デフォルト                     |
+| --------------- | ------------------------------------ | ------------------------------ |
+| `--iterations`  | 自己対戦→学習のループ回数            | 20                             |
+| `--games`       | 1 イテレーション当たりの対局数       | 25                             |
+| `--sims`        | 1 手当たりの MCTS シミュレーション数 | 200                            |
+| `--buffer-size` | リプレイバッファ容量（局面数）       | 100000                         |
+| `--checkpoint`  | 再開するチェックポイント `.pt`       | なし                           |
+| `--output`      | ONNX 出力先                          | `public/models/go-policy.onnx` |
 
 ### M1 Mac での目安
 
-| sims/手 | 1対局 | 25対局 | 学習 | 1イテレーション |
-|---|---|---|---|---|
-| 50  | ~10s | ~4min  | ~1min | ~5min |
-| 200 | ~40s | ~17min | ~2min | ~20min |
-| 400 | ~80s | ~33min | ~2min | ~35min |
+| sims/手 | 1対局 | 25対局 | 学習  | 1イテレーション |
+| ------- | ----- | ------ | ----- | --------------- |
+| 50      | ~10s  | ~4min  | ~1min | ~5min           |
+| 200     | ~40s  | ~17min | ~2min | ~20min          |
+| 400     | ~80s  | ~33min | ~2min | ~35min          |
 
 チェックポイントは `scripts/igo/checkpoints/iter_NNN.pt` に保存される。  
 `--checkpoint` で途中から再開できる。

@@ -8,11 +8,11 @@
 
 ### 碁盤
 
-| 種別 | 路数 | 交点数 |
-|------|------|--------|
-| 標準 | 19×19 | 361 |
-| 中型 | 13×13 | 169 |
-| 小型 | 9×9  | 81    |
+| 種別 | 路数  | 交点数 |
+| ---- | ----- | ------ |
+| 標準 | 19×19 | 361    |
+| 中型 | 13×13 | 169    |
+| 小型 | 9×9   | 81     |
 
 - 盤面は縦横の線が交差した**交点**で構成される
 - 全交点は対局開始時に空（empty）
@@ -192,10 +192,10 @@ pass_count >= 2 → 終局
 
 ### コミ（Komi）
 
-| 対局種別 | コミ |
-|----------|------|
-| 互先（even game）| 白に6.5目 |
-| ハンデ戦 | 白に0.5目 |
+| 対局種別          | コミ      |
+| ----------------- | --------- |
+| 互先（even game） | 白に6.5目 |
+| ハンデ戦          | 白に0.5目 |
 
 - 0.5目が含まれることで引き分けが発生しない
 - 日本棋院は2002年9月に6.5目を正式採用
@@ -246,16 +246,16 @@ pass_count >= 2 → 終局
 
 ### ハンデ石の数と配置（19×19）
 
-| 置き数 | 配置する星 |
-|--------|-----------|
-| 2石 | 右下、左上 |
-| 3石 | 右下、左上、右上 |
-| 4石 | 4隅すべて |
-| 5石 | 4隅 + 天元 |
-| 6石 | 4隅 + 左右辺中央 |
-| 7石 | 4隅 + 左右辺中央 + 上辺中央 |
-| 8石 | 4隅 + 左右辺中央 + 上下辺中央 |
-| 9石 | 9星すべて |
+| 置き数 | 配置する星                    |
+| ------ | ----------------------------- |
+| 2石    | 右下、左上                    |
+| 3石    | 右下、左上、右上              |
+| 4石    | 4隅すべて                     |
+| 5石    | 4隅 + 天元                    |
+| 6石    | 4隅 + 左右辺中央              |
+| 7石    | 4隅 + 左右辺中央 + 上辺中央   |
+| 8石    | 4隅 + 左右辺中央 + 上下辺中央 |
+| 9石    | 9星すべて                     |
 
 具体的な座標（row, col、1-indexed）:
 
@@ -281,7 +281,7 @@ pass_count >= 2 → 終局
 type Color = "black" | "white" | "empty";
 
 interface BoardState {
-  grid: Color[][];       // [row][col]
+  grid: Color[][]; // [row][col]
   prisoners: { black: number; white: number };
   currentTurn: "black" | "white";
   passCount: number;
@@ -292,15 +292,15 @@ interface BoardState {
 
 ### 必須の処理
 
-| 処理 | 概要 |
-|------|------|
-| `isLegal(point, color)` | 空点チェック・自殺手チェック・コウチェック |
-| `placeStone(point, color)` | 石を置く→相手石取る→自石のダメ確認 |
-| `findGroup(point)` | 連結する同色石を全て検索（BFS/DFS） |
-| `countLiberties(group)` | 連の呼吸点数を返す |
-| `removeGroup(group)` | 連を除去しアゲハマに加算 |
-| `calculateScore()` | 地・アゲハマ・コミを合計してスコアを返す |
-| `identifyTerritory()` | 各空領域が黒・白・中立のどれかを判定 |
+| 処理                       | 概要                                       |
+| -------------------------- | ------------------------------------------ |
+| `isLegal(point, color)`    | 空点チェック・自殺手チェック・コウチェック |
+| `placeStone(point, color)` | 石を置く→相手石取る→自石のダメ確認         |
+| `findGroup(point)`         | 連結する同色石を全て検索（BFS/DFS）        |
+| `countLiberties(group)`    | 連の呼吸点数を返す                         |
+| `removeGroup(group)`       | 連を除去しアゲハマに加算                   |
+| `calculateScore()`         | 地・アゲハマ・コミを合計してスコアを返す   |
+| `identifyTerritory()`      | 各空領域が黒・白・中立のどれかを判定       |
 
 ### コウ判定の実装
 
@@ -326,4 +326,4 @@ interface BoardState {
 - [日本棋院 公式サイト](https://www.nihonkiin.or.jp/)
 - [日本囲碁ルール (英語)](https://www.cs.cmu.edu/~wjh/go/rules/Japanese.html)
 - [囲碁のルール比較 - Wikipedia](https://en.wikipedia.org/wiki/Rules_of_Go)
-- [コミ - Wikipedia](https://en.wikipedia.org/wiki/Komi_(Go))
+- [コミ - Wikipedia](<https://en.wikipedia.org/wiki/Komi_(Go)>)

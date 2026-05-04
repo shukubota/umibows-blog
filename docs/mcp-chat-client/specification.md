@@ -36,6 +36,7 @@ Model Context Protocol (MCP) は、LLMアプリケーションがセキュアに
 ### 技術スタック
 
 #### フロントエンド（Chat Client）
+
 - **Next.js 14**: App Router + Server Actions
 - **TypeScript**: 型安全性
 - **Tailwind CSS**: UI デザイン
@@ -44,6 +45,7 @@ Model Context Protocol (MCP) は、LLMアプリケーションがセキュアに
 - **React Query**: サーバー状態管理
 
 #### MCPサーバー
+
 - **Node.js/TypeScript**: サーバー実装
 - **@modelcontextprotocol/sdk**: MCPサーバーSDK
 - **WebSocket/JSON-RPC**: 通信プロトコル
@@ -79,14 +81,14 @@ Model Context Protocol (MCP) は、LLMアプリケーションがセキュアに
 
 ```typescript
 // lib/mcp-client.ts
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
   CallToolRequest,
   CallToolResult,
   ListResourcesRequest,
-  ListToolsRequest
-} from '@modelcontextprotocol/sdk/types.js';
+  ListToolsRequest,
+} from "@modelcontextprotocol/sdk/types.js";
 
 export interface MCPClientConfig {
   serverExecutable: string;
@@ -102,19 +104,22 @@ export class MCPClientManager {
     this.transport = new StdioClientTransport({
       command: config.serverExecutable,
       args: config.serverArgs || [],
-      env: config.serverEnv || {}
+      env: config.serverEnv || {},
     });
 
-    this.client = new Client({
-      name: "umibows-chat-client",
-      version: "1.0.0"
-    }, {
-      capabilities: {
-        tools: {},
-        resources: {},
-        prompts: {}
+    this.client = new Client(
+      {
+        name: "umibows-chat-client",
+        version: "1.0.0",
+      },
+      {
+        capabilities: {
+          tools: {},
+          resources: {},
+          prompts: {},
+        },
       }
-    });
+    );
 
     await this.client.connect(this.transport);
   }
@@ -126,35 +131,29 @@ export class MCPClientManager {
   }
 
   async listTools() {
-    if (!this.client) throw new Error('MCPクライアントが接続されていません');
+    if (!this.client) throw new Error("MCPクライアントが接続されていません");
 
-    const response = await this.client.request(
-      { method: "tools/list" },
-      ListToolsRequest
-    );
+    const response = await this.client.request({ method: "tools/list" }, ListToolsRequest);
     return response.tools;
   }
 
   async listResources() {
-    if (!this.client) throw new Error('MCPクライアントが接続されていません');
+    if (!this.client) throw new Error("MCPクライアントが接続されていません");
 
-    const response = await this.client.request(
-      { method: "resources/list" },
-      ListResourcesRequest
-    );
+    const response = await this.client.request({ method: "resources/list" }, ListResourcesRequest);
     return response.resources;
   }
 
   async callTool(name: string, args: any): Promise<CallToolResult> {
-    if (!this.client) throw new Error('MCPクライアントが接続されていません');
+    if (!this.client) throw new Error("MCPクライアントが接続されていません");
 
     const response = await this.client.request(
       {
         method: "tools/call",
         params: {
           name,
-          arguments: args
-        }
+          arguments: args,
+        },
       },
       CallToolRequest
     );
@@ -162,11 +161,11 @@ export class MCPClientManager {
   }
 
   async readResource(uri: string) {
-    if (!this.client) throw new Error('MCPクライアントが接続されていません');
+    if (!this.client) throw new Error("MCPクライアントが接続されていません");
 
     return await this.client.request({
       method: "resources/read",
-      params: { uri }
+      params: { uri },
     });
   }
 }
@@ -176,8 +175,8 @@ export class MCPClientManager {
 
 ```typescript
 // hooks/useMCPClient.ts
-import { useState, useEffect, useCallback } from 'react';
-import { MCPClientManager, MCPClientConfig } from '@/lib/mcp-client';
+import { useState, useEffect, useCallback } from "react";
+import { MCPClientManager, MCPClientConfig } from "@/lib/mcp-client";
 
 export function useMCPClient() {
   const [client] = useState(() => new MCPClientManager());
@@ -185,24 +184,27 @@ export function useMCPClient() {
   const [tools, setTools] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
 
-  const connect = useCallback(async (config: MCPClientConfig) => {
-    try {
-      await client.connect(config);
-      setIsConnected(true);
+  const connect = useCallback(
+    async (config: MCPClientConfig) => {
+      try {
+        await client.connect(config);
+        setIsConnected(true);
 
-      // ツールとリソースの一覧を取得
-      const [toolsList, resourcesList] = await Promise.all([
-        client.listTools(),
-        client.listResources()
-      ]);
+        // ツールとリソースの一覧を取得
+        const [toolsList, resourcesList] = await Promise.all([
+          client.listTools(),
+          client.listResources(),
+        ]);
 
-      setTools(toolsList);
-      setResources(resourcesList);
-    } catch (error) {
-      console.error('MCP接続エラー:', error);
-      setIsConnected(false);
-    }
-  }, [client]);
+        setTools(toolsList);
+        setResources(resourcesList);
+      } catch (error) {
+        console.error("MCP接続エラー:", error);
+        setIsConnected(false);
+      }
+    },
+    [client]
+  );
 
   const disconnect = useCallback(async () => {
     await client.disconnect();
@@ -211,13 +213,19 @@ export function useMCPClient() {
     setResources([]);
   }, [client]);
 
-  const callTool = useCallback(async (name: string, args: any) => {
-    return await client.callTool(name, args);
-  }, [client]);
+  const callTool = useCallback(
+    async (name: string, args: any) => {
+      return await client.callTool(name, args);
+    },
+    [client]
+  );
 
-  const readResource = useCallback(async (uri: string) => {
-    return await client.readResource(uri);
-  }, [client]);
+  const readResource = useCallback(
+    async (uri: string) => {
+      return await client.readResource(uri);
+    },
+    [client]
+  );
 
   useEffect(() => {
     return () => {
@@ -232,7 +240,7 @@ export function useMCPClient() {
     readResource,
     isConnected,
     tools,
-    resources
+    resources,
   };
 }
 ```
@@ -359,14 +367,14 @@ export default function ChatInterface() {
 
 ```typescript
 // mcp-server/server.ts
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+} from "@modelcontextprotocol/sdk/types.js";
 
 class CustomMCPServer {
   private server: Server;
@@ -375,13 +383,13 @@ class CustomMCPServer {
     this.server = new Server(
       {
         name: "custom-mcp-server",
-        version: "1.0.0"
+        version: "1.0.0",
       },
       {
         capabilities: {
           tools: {},
-          resources: {}
-        }
+          resources: {},
+        },
       }
     );
 
@@ -401,10 +409,10 @@ class CustomMCPServer {
               type: "object",
               properties: {
                 pattern: { type: "string", description: "検索パターン" },
-                directory: { type: "string", description: "検索ディレクトリ" }
+                directory: { type: "string", description: "検索ディレクトリ" },
               },
-              required: ["pattern"]
-            }
+              required: ["pattern"],
+            },
           },
           {
             name: "api_call",
@@ -414,12 +422,12 @@ class CustomMCPServer {
               properties: {
                 url: { type: "string", description: "API URL" },
                 method: { type: "string", description: "HTTPメソッド" },
-                data: { type: "object", description: "送信データ" }
+                data: { type: "object", description: "送信データ" },
               },
-              required: ["url", "method"]
-            }
-          }
-        ]
+              required: ["url", "method"],
+            },
+          },
+        ],
       };
     });
 
@@ -447,9 +455,9 @@ class CustomMCPServer {
             uri: "file://./config.json",
             name: "設定ファイル",
             description: "アプリケーション設定",
-            mimeType: "application/json"
-          }
-        ]
+            mimeType: "application/json",
+          },
+        ],
       };
     });
 
@@ -458,16 +466,16 @@ class CustomMCPServer {
       const { uri } = request.params;
 
       if (uri === "file://./config.json") {
-        const fs = await import('fs');
-        const content = fs.readFileSync('./config.json', 'utf8');
+        const fs = await import("fs");
+        const content = fs.readFileSync("./config.json", "utf8");
         return {
           contents: [
             {
               uri,
               mimeType: "application/json",
-              text: content
-            }
-          ]
+              text: content,
+            },
+          ],
         };
       }
 
@@ -477,7 +485,7 @@ class CustomMCPServer {
 
   private async handleFileSearch(args: any) {
     const { pattern, directory = "./" } = args;
-    const glob = await import('glob');
+    const glob = await import("glob");
 
     const files = glob.sync(pattern, { cwd: directory });
 
@@ -485,9 +493,9 @@ class CustomMCPServer {
       content: [
         {
           type: "text",
-          text: `検索結果: ${files.length}個のファイルが見つかりました\n${files.join('\n')}`
-        }
-      ]
+          text: `検索結果: ${files.length}個のファイルが見つかりました\n${files.join("\n")}`,
+        },
+      ],
     };
   }
 
@@ -498,9 +506,9 @@ class CustomMCPServer {
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: data ? JSON.stringify(data) : undefined
+        body: data ? JSON.stringify(data) : undefined,
       });
 
       const result = await response.json();
@@ -509,19 +517,19 @@ class CustomMCPServer {
         content: [
           {
             type: "text",
-            text: `API呼び出し成功\nステータス: ${response.status}\nレスポンス: ${JSON.stringify(result, null, 2)}`
-          }
-        ]
+            text: `API呼び出し成功\nステータス: ${response.status}\nレスポンス: ${JSON.stringify(result, null, 2)}`,
+          },
+        ],
       };
     } catch (error) {
       return {
         content: [
           {
             type: "text",
-            text: `API呼び出しエラー: ${error.message}`
-          }
+            text: `API呼び出しエラー: ${error.message}`,
+          },
         ],
-        isError: true
+        isError: true,
       };
     }
   }
@@ -540,16 +548,19 @@ server.start().catch(console.error);
 ## セキュリティ考慮事項
 
 ### 認証・認可
+
 - MCPサーバーへのアクセス制御
 - APIキーやトークンの安全な管理
 - ユーザー権限に基づくツール制限
 
 ### データ保護
+
 - MCPクライアント-サーバー間通信の暗号化
 - 機密データの適切な処理
 - ログ出力時の個人情報マスキング
 
 ### サンドボックス化
+
 - MCPサーバーの実行環境隔離
 - ファイルシステムアクセスの制限
 - ネットワークアクセス制御
@@ -580,12 +591,14 @@ npm run test:mcp
 ## 今後の拡張計画
 
 ### 機能拡張
+
 - 複数MCPサーバーの同時接続
 - MCPサーバーのプラグインアーキテクチャ
 - カスタムツールの動的登録
 - リアルタイムコラボレーション
 
 ### パフォーマンス最適化
+
 - MCPコネクションプール
 - ツール実行結果のキャッシュ
 - ストリーミングレスポンス対応

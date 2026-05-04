@@ -119,25 +119,25 @@ npx tsc --init
 
 ```typescript
 // __tests__/mcp-client.test.ts
-import { MCPClientManager } from '@/lib/mcp-client';
+import { MCPClientManager } from "@/lib/mcp-client";
 
-describe('MCPClientManager', () => {
+describe("MCPClientManager", () => {
   let client: MCPClientManager;
 
   beforeEach(() => {
     client = new MCPClientManager();
   });
 
-  test('should connect to MCP server', async () => {
+  test("should connect to MCP server", async () => {
     const config = {
-      serverExecutable: 'node',
-      serverArgs: ['test-server.js']
+      serverExecutable: "node",
+      serverArgs: ["test-server.js"],
     };
 
     await expect(client.connect(config)).resolves.not.toThrow();
   });
 
-  test('should list available tools', async () => {
+  test("should list available tools", async () => {
     // テスト実装
   });
 });
@@ -184,9 +184,9 @@ describe('Chat + MCP Integration', () => {
 ```typescript
 // lib/debug.ts
 export const DEBUG = {
-  MCP_CLIENT: process.env.DEBUG_MCP_CLIENT === 'true',
-  TOOL_CALLS: process.env.DEBUG_TOOL_CALLS === 'true',
-  API_CALLS: process.env.DEBUG_API_CALLS === 'true'
+  MCP_CLIENT: process.env.DEBUG_MCP_CLIENT === "true",
+  TOOL_CALLS: process.env.DEBUG_TOOL_CALLS === "true",
+  API_CALLS: process.env.DEBUG_API_CALLS === "true",
 };
 
 export function debugLog(category: keyof typeof DEBUG, message: string, data?: any) {
@@ -225,7 +225,7 @@ export class MCPConnectionPool {
   }
 
   private getConfigKey(config: MCPClientConfig): string {
-    return `${config.serverExecutable}:${config.serverArgs?.join(',')}`;
+    return `${config.serverExecutable}:${config.serverArgs?.join(",")}`;
   }
 
   private async closeOldestConnection(): Promise<void> {
@@ -251,7 +251,7 @@ export class MCPCache {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
-      ttl: ttlMs
+      ttl: ttlMs,
     });
   }
 
@@ -284,17 +284,17 @@ export class MCPCache {
 
 ```typescript
 // lib/validation.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 export const ToolCallSchema = z.object({
   name: z.string().min(1).max(100),
-  arguments: z.record(z.any()).optional()
+  arguments: z.record(z.any()).optional(),
 });
 
 export const MCPConfigSchema = z.object({
   serverExecutable: z.string().min(1),
   serverArgs: z.array(z.string()).optional(),
-  serverEnv: z.record(z.string()).optional()
+  serverEnv: z.record(z.string()).optional(),
 });
 
 export function validateToolCall(data: unknown) {
@@ -320,19 +320,16 @@ export class PermissionManager {
   constructor(private config: PermissionConfig) {}
 
   canUseTool(toolName: string): boolean {
-    return this.config.allowedTools.includes(toolName) ||
-           this.config.allowedTools.includes('*');
+    return this.config.allowedTools.includes(toolName) || this.config.allowedTools.includes("*");
   }
 
   canAccessResource(resourceUri: string): boolean {
-    return this.config.allowedResources.some(pattern =>
-      this.matchPattern(resourceUri, pattern)
-    );
+    return this.config.allowedResources.some((pattern) => this.matchPattern(resourceUri, pattern));
   }
 
   private matchPattern(str: string, pattern: string): boolean {
     // パターンマッチング実装
-    return str.match(new RegExp(pattern.replace('*', '.*'))) !== null;
+    return str.match(new RegExp(pattern.replace("*", ".*"))) !== null;
   }
 }
 ```
@@ -371,7 +368,7 @@ CMD ["npm", "start"]
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 services:
   chat-client:
     build: .
