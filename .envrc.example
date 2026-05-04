@@ -6,6 +6,9 @@ export BASIC_AUTH_ENABLED=false
 export BASIC_AUTH_USER=admin
 export BASIC_AUTH_PASSWORD=your_secure_password_here
 
+# Igo AI API (Cloud Run)
+export IGO_API_URL=https://igo-api-xxxx-an.a.run.app
+
 # Anthropic Vertex AI (Claude via Google Cloud)
 export ANTHROPIC_VERTEX_PROJECT_ID=your-gcp-project-id
 export CLOUD_ML_REGION=global
