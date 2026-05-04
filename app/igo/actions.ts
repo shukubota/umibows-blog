@@ -4,9 +4,13 @@ import { Grid, Point, StoneColor } from "@/hooks/go/engine";
 
 const IGO_API_URL = process.env.IGO_API_URL ?? "http://localhost:8080";
 
-export async function warmupModel(): Promise<void> {
-  const res = await fetch(`${IGO_API_URL}/health`, { cache: "no-store" });
-  if (!res.ok) throw new Error("igo-api unavailable");
+export async function warmupModel(): Promise<boolean> {
+  try {
+    const res = await fetch(`${IGO_API_URL}/health`, { cache: "no-store" });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export async function computeCpuMoveNN(

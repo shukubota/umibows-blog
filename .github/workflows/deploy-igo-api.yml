@@ -64,6 +64,9 @@ jobs:
             --timeout 60s \
             --project ${{ secrets.GCP_PROJECT_ID }}
 
+      - name: Allow unauthenticated access
+        run: gcloud run services add-iam-policy-binding ${{ env.SERVICE }} --region ${{ env.REGION }} --member allUsers --role roles/run.invoker --project ${{ secrets.GCP_PROJECT_ID }}
+
       - name: Show service URL
         run: |
           gcloud run services describe ${{ env.SERVICE }} \
