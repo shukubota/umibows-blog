@@ -64,18 +64,18 @@ function QACard({ item }: { item: QAItem }) {
       <div className="space-y-3">
         <div className="bg-gray-900 rounded-lg p-3">
           <p className="text-xs text-blue-400 font-semibold mb-1">YOUR QUESTION</p>
-          <p className="text-white text-sm">"{item.question}"</p>
+          <p className="text-white text-sm">&quot;{item.question}&quot;</p>
         </div>
 
         {showAnswer ? (
           <>
             <div className="bg-gray-700/50 rounded-lg p-3">
               <p className="text-xs text-green-400 font-semibold mb-1">THEIR ANSWER</p>
-              <p className="text-gray-200 text-sm italic">"{item.sampleAnswer}"</p>
+              <p className="text-gray-200 text-sm italic">&quot;{item.sampleAnswer}&quot;</p>
             </div>
             <div className="bg-gray-900 rounded-lg p-3">
               <p className="text-xs text-purple-400 font-semibold mb-1">FOLLOW-UP</p>
-              <p className="text-white text-sm">"{item.followUpQuestion}"</p>
+              <p className="text-white text-sm">&quot;{item.followUpQuestion}&quot;</p>
             </div>
           </>
         ) : (
@@ -198,7 +198,7 @@ export default function CompanyEnglishPage() {
             <section>
               <h2 className="text-lg font-semibold text-blue-400 mb-3">Conversation Scenarios</h2>
               <p className="text-gray-500 text-xs mb-4">
-                Tap "Show answer" to reveal the sample response and follow-up.
+                Tap &quot;Show answer&quot; to reveal the sample response and follow-up.
               </p>
               <div className="space-y-4">
                 {result.qaList.map((item, i) => (

@@ -46,7 +46,7 @@ function genSpiral(n: number): Point[] {
 // ─── MLP ───────────────────────────────────────────────────────────────────
 interface Net {
   W: number[][][]; // W[l][i][j]: weight layer l→l+1, node i→j
-  b: number[][];   // b[l][j]: bias for node j in layer l+1
+  b: number[][]; // b[l][j]: bias for node j in layer l+1
   topo: number[];
 }
 
@@ -57,8 +57,8 @@ function createNet(topo: number[]): Net {
     const scale = Math.sqrt(2 / topo[l]); // He init
     W.push(
       Array.from({ length: topo[l] }, () =>
-        Array.from({ length: topo[l + 1] }, () => (Math.random() * 2 - 1) * scale),
-      ),
+        Array.from({ length: topo[l + 1] }, () => (Math.random() * 2 - 1) * scale)
+      )
     );
     b.push(new Array(topo[l + 1]).fill(0));
   }
@@ -151,7 +151,7 @@ function renderBoundary(
   data: Point[],
   actKey: ActKey,
   W: number,
-  H: number,
+  H: number
 ) {
   // Pre-compute grid
   const grid = new Float32Array(GRID_RES * GRID_RES);
@@ -191,9 +191,7 @@ function renderBoundary(
       const tl = grid[gy * GRID_RES + gx];
       const tr = grid[gy * GRID_RES + gx + 1];
       const bl = grid[(gy + 1) * GRID_RES + gx];
-      const hasEdge =
-        (tl > 0.5) !== (tr > 0.5) ||
-        (tl > 0.5) !== (bl > 0.5);
+      const hasEdge = tl > 0.5 !== tr > 0.5 || tl > 0.5 !== bl > 0.5;
       if (hasEdge) {
         ctx.beginPath();
         ctx.rect(gx * cellW, gy * cellH, cellW, cellH);
@@ -223,7 +221,11 @@ function renderBoundary(
 const LAYER_COLORS = ["#ff6b9d", "#c77dff", "#48cae4", "#ffd60a"];
 
 function parseHex(hex: string) {
-  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
 }
 
 function renderNetwork(
@@ -231,7 +233,7 @@ function renderNetwork(
   net: Net,
   sampleActs: number[][] | null,
   W: number,
-  H: number,
+  H: number
 ) {
   ctx.fillStyle = "#07071a";
   ctx.fillRect(0, 0, W, H);
@@ -254,8 +256,7 @@ function renderNetwork(
       for (let j = 0; j < net.topo[l + 1]; j++) {
         const w = net.W[l][i][j];
         const alpha = Math.min(0.85, Math.abs(w) * 0.45 + 0.04);
-        ctx.strokeStyle =
-          w > 0 ? `rgba(80,140,255,${alpha})` : `rgba(255,80,100,${alpha})`;
+        ctx.strokeStyle = w > 0 ? `rgba(80,140,255,${alpha})` : `rgba(255,80,100,${alpha})`;
         ctx.lineWidth = Math.min(2.5, Math.abs(w) * 1.2 + 0.3);
         ctx.beginPath();
         ctx.moveTo(pos[l][i].x, pos[l][i].y);
@@ -286,7 +287,10 @@ function renderNetwork(
 
       // Fill
       const fill = ctx.createRadialGradient(x - 4, y - 4, 0, x, y, R);
-      fill.addColorStop(0, `rgba(${Math.min(255, cr * act + 35)},${Math.min(255, cg * act + 35)},${Math.min(255, cb * act + 40)},1)`);
+      fill.addColorStop(
+        0,
+        `rgba(${Math.min(255, cr * act + 35)},${Math.min(255, cg * act + 35)},${Math.min(255, cb * act + 40)},1)`
+      );
       fill.addColorStop(1, "rgba(10,10,30,1)");
       ctx.beginPath();
       ctx.arc(x, y, R, 0, Math.PI * 2);
@@ -330,7 +334,7 @@ function renderChart(
   losses: number[],
   accs: number[],
   W: number,
-  H: number,
+  H: number
 ) {
   ctx.fillStyle = "#07071a";
   ctx.fillRect(0, 0, W, H);
@@ -360,7 +364,9 @@ function renderChart(
   ctx.beginPath();
   ctx.strokeStyle = "#ff6b6b";
   ctx.lineWidth = 2;
-  losses.forEach((v, i) => (i === 0 ? ctx.moveTo(xOf(i), yOfLoss(v)) : ctx.lineTo(xOf(i), yOfLoss(v))));
+  losses.forEach((v, i) =>
+    i === 0 ? ctx.moveTo(xOf(i), yOfLoss(v)) : ctx.lineTo(xOf(i), yOfLoss(v))
+  );
   ctx.stroke();
 
   // Accuracy curve
@@ -414,9 +420,15 @@ export default function NNTrainPage() {
     sampleActs: null as number[][] | null,
   });
 
-  useEffect(() => { isRunRef.current = isRunning; }, [isRunning]);
-  useEffect(() => { lrRef.current = lr; }, [lr]);
-  useEffect(() => { actRef.current = actKey; }, [actKey]);
+  useEffect(() => {
+    isRunRef.current = isRunning;
+  }, [isRunning]);
+  useEffect(() => {
+    lrRef.current = lr;
+  }, [lr]);
+  useEffect(() => {
+    actRef.current = actKey;
+  }, [actKey]);
 
   // Reset when hidden size changes
   useEffect(() => {
@@ -426,7 +438,9 @@ export default function NNTrainPage() {
     s.accs = [];
     s.epoch = 0;
     s.sampleActs = null;
-    setEpoch(0); setDispAcc(0); setDispLoss(0);
+    setEpoch(0);
+    setDispAcc(0);
+    setDispLoss(0);
   }, [hiddenSize]);
 
   const handleReset = useCallback(() => {
@@ -438,7 +452,9 @@ export default function NNTrainPage() {
     s.accs = [];
     s.epoch = 0;
     s.sampleActs = null;
-    setEpoch(0); setDispAcc(0); setDispLoss(0);
+    setEpoch(0);
+    setDispAcc(0);
+    setDispLoss(0);
   }, [hiddenSize]);
 
   // Permanent animation loop
@@ -487,7 +503,8 @@ export default function NNTrainPage() {
       const bc = boundaryRef.current;
       const nc = netRef.current;
       const cc = chartRef.current;
-      if (bc) renderBoundary(bc.getContext("2d")!, s.net, s.data, actRef.current, bc.width, bc.height);
+      if (bc)
+        renderBoundary(bc.getContext("2d")!, s.net, s.data, actRef.current, bc.width, bc.height);
       if (nc) renderNetwork(nc.getContext("2d")!, s.net, s.sampleActs, nc.width, nc.height);
       if (cc) renderChart(cc.getContext("2d")!, s.losses, s.accs, cc.width, cc.height);
 
@@ -598,7 +615,11 @@ export default function NNTrainPage() {
             ref={boundaryRef}
             width={380}
             height={380}
-            style={{ borderRadius: 12, display: "block", border: "1px solid rgba(100,120,255,0.18)" }}
+            style={{
+              borderRadius: 12,
+              display: "block",
+              border: "1px solid rgba(100,120,255,0.18)",
+            }}
           />
         </div>
 
@@ -606,15 +627,19 @@ export default function NNTrainPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
             <div style={{ fontSize: 10, color: "rgba(150,160,210,0.45)", marginBottom: 4 }}>
-              Network Weights &amp; Activations
-              &nbsp;<span style={{ color: "rgba(80,140,255,0.6)" }}>─ positive</span>
+              Network Weights &amp; Activations &nbsp;
+              <span style={{ color: "rgba(80,140,255,0.6)" }}>─ positive</span>
               &nbsp;<span style={{ color: "rgba(255,80,100,0.6)" }}>─ negative</span>
             </div>
             <canvas
               ref={netRef}
               width={370}
               height={222}
-              style={{ borderRadius: 12, display: "block", border: "1px solid rgba(100,120,255,0.18)" }}
+              style={{
+                borderRadius: 12,
+                display: "block",
+                border: "1px solid rgba(100,120,255,0.18)",
+              }}
             />
           </div>
           <div>
@@ -627,7 +652,11 @@ export default function NNTrainPage() {
               ref={chartRef}
               width={370}
               height={130}
-              style={{ borderRadius: 12, display: "block", border: "1px solid rgba(100,120,255,0.18)" }}
+              style={{
+                borderRadius: 12,
+                display: "block",
+                border: "1px solid rgba(100,120,255,0.18)",
+              }}
             />
           </div>
         </div>
@@ -654,12 +683,19 @@ export default function NNTrainPage() {
           whileHover={{ scale: 1.04 }}
           onClick={() => setIsRunning((v) => !v)}
           style={{
-            display: "flex", alignItems: "center", gap: 7,
-            padding: "8px 20px", borderRadius: 8, border: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            padding: "8px 20px",
+            borderRadius: 8,
+            border: "none",
             background: isRunning
               ? "linear-gradient(135deg,rgba(255,70,90,0.9),rgba(200,40,60,0.9))"
               : "linear-gradient(135deg,rgba(60,110,255,0.9),rgba(100,60,220,0.9))",
-            color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700,
+            color: "#fff",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: 700,
             fontFamily: "inherit",
             boxShadow: isRunning ? "0 0 16px rgba(255,70,90,0.3)" : "0 0 16px rgba(60,110,255,0.3)",
             transition: "background 0.2s, box-shadow 0.2s",
@@ -673,11 +709,17 @@ export default function NNTrainPage() {
           whileTap={{ scale: 0.93 }}
           onClick={handleReset}
           style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "8px 14px", borderRadius: 8,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "8px 14px",
+            borderRadius: 8,
             border: "1px solid rgba(255,255,255,0.13)",
-            background: "transparent", color: "#aab", cursor: "pointer",
-            fontSize: 13, fontFamily: "inherit",
+            background: "transparent",
+            color: "#aab",
+            cursor: "pointer",
+            fontSize: 13,
+            fontFamily: "inherit",
           }}
         >
           <RotateCcw size={13} />
@@ -688,14 +730,20 @@ export default function NNTrainPage() {
           学習率
           <select value={lr} onChange={(e) => setLr(+e.target.value)} style={selectStyle}>
             {[0.001, 0.003, 0.01, 0.03, 0.1, 0.3].map((v) => (
-              <option key={v} value={v}>{v}</option>
+              <option key={v} value={v}>
+                {v}
+              </option>
             ))}
           </select>
         </label>
 
         <label style={labelStyle}>
           活性化関数
-          <select value={actKey} onChange={(e) => setActKey(e.target.value as ActKey)} style={selectStyle}>
+          <select
+            value={actKey}
+            onChange={(e) => setActKey(e.target.value as ActKey)}
+            style={selectStyle}
+          >
             <option value="relu">ReLU</option>
             <option value="tanh">Tanh</option>
             <option value="sigmoid">Sigmoid</option>
@@ -704,9 +752,15 @@ export default function NNTrainPage() {
 
         <label style={labelStyle}>
           隠れ層ノード数
-          <select value={hiddenSize} onChange={(e) => setHiddenSize(+e.target.value)} style={selectStyle}>
+          <select
+            value={hiddenSize}
+            onChange={(e) => setHiddenSize(+e.target.value)}
+            style={selectStyle}
+          >
             {[4, 8, 16, 32].map((v) => (
-              <option key={v} value={v}>{v}</option>
+              <option key={v} value={v}>
+                {v}
+              </option>
             ))}
           </select>
         </label>
