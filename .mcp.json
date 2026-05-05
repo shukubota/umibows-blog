@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "line-group-messenger": {
+      "command": "uv",
+      "args": ["run", "--script", "line-group-messenger/server.py"]
+    }
+  }
+}
