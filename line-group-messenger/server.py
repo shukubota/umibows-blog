@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# dependencies = ["mcp"]
+# dependencies = ["mcp", "google-cloud-storage"]
 # ///
 """LINE group messenger MCP server.
 
@@ -9,12 +9,18 @@ Channel is fixed via environment variables (loaded from .env in this directory).
 """
 from __future__ import annotations
 
+import datetime
 import json
+import mimetypes
 import os
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 
+import google.auth
+from google.auth import impersonated_credentials
+from google.cloud import storage
 from mcp.server.fastmcp import FastMCP
 
 PUSH_ENDPOINT = "https://api.line.me/v2/bot/message/push"
@@ -120,6 +126,70 @@ def send_line_image(original_url: str, preview_url: str = "") -> str:
         return err
     preview = preview_url or original_url
     return _push(token, group_id, [{"type": "image", "originalContentUrl": original_url, "previewImageUrl": preview}])
+
+
+def _gcs_upload_signed_url(file_path: str, expiry_seconds: int) -> tuple[str, str]:
+    """Upload a local image to GCS and return (signed_url, error)."""
+    bucket_name = os.environ.get("GCS_BUCKET_NAME")
+    if not bucket_name:
+        return "", "Error: GCS_BUCKET_NAME is not set"
+
+    sa_email = os.environ.get("GCS_SERVICE_ACCOUNT_EMAIL")
+    if not sa_email:
+        return "", "Error: GCS_SERVICE_ACCOUNT_EMAIL is not set"
+
+    path = Path(file_path)
+    if not path.is_file():
+        return "", f"Error: file not found: {file_path}"
+
+    content_type, _ = mimetypes.guess_type(file_path)
+    if content_type not in ("image/jpeg", "image/png"):
+        return "", f"Error: unsupported content type: {content_type} (JPEG or PNG required)"
+
+    project_id = os.environ.get("GCS_PROJECT_ID")
+
+    source_creds, default_project = google.auth.default()
+    project_id = project_id or default_project
+    target_creds = impersonated_credentials.Credentials(
+        source_credentials=source_creds,
+        target_principal=sa_email,
+        target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
+    client = storage.Client(project=project_id, credentials=target_creds)
+
+    blob_name = f"line-tmp/{uuid.uuid4()}{path.suffix}"
+    blob = client.bucket(bucket_name).blob(blob_name)
+    blob.upload_from_filename(str(path), content_type=content_type)
+
+    signed_url = blob.generate_signed_url(
+        expiration=datetime.timedelta(seconds=expiry_seconds),
+        method="GET",
+        version="v4",
+        credentials=target_creds,
+    )
+    return signed_url, ""
+
+
+@mcp.tool()
+def send_line_image_file(file_path: str, expiry_seconds: int = 60) -> str:
+    """Upload a local image file to GCS and send it to the configured LINE group.
+
+    The image is uploaded to GCS with a signed URL valid for expiry_seconds.
+    After LINE fetches the image, the URL expires automatically.
+
+    Args:
+        file_path: Absolute path to a local JPEG or PNG image file.
+        expiry_seconds: How long the signed URL remains valid (default: 60).
+    """
+    token, group_id, err = _get_credentials()
+    if err:
+        return err
+
+    url, err = _gcs_upload_signed_url(file_path, expiry_seconds)
+    if err:
+        return err
+
+    return _push(token, group_id, [{"type": "image", "originalContentUrl": url, "previewImageUrl": url}])
 
 
 if __name__ == "__main__":
