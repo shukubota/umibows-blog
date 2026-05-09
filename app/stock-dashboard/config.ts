@@ -4,6 +4,8 @@ export const WATCHLIST = [
   { ticker: "MSFT", name: "Microsoft" },
   { ticker: "GOOGL", name: "Alphabet" },
   { ticker: "META", name: "Meta" },
+  { ticker: "QCOM", name: "Qualcomm" },
+  { ticker: "SOXX", name: "半導体 ETF" },
   { ticker: "VOO", name: "S&P500 ETF" },
   { ticker: "QQQ", name: "NASDAQ ETF" },
 ];
