@@ -30,7 +30,9 @@
     "next": "14.2.3",
     "onnxruntime-node": "^1.25.1",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "recharts": "^3.8.1",
+    "yahoo-finance2": "^3.14.0"
   },
   "devDependencies": {
     "@types/katex": "^0.16.7",
