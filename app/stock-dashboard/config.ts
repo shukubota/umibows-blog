@@ -8,6 +8,8 @@ export const WATCHLIST = [
   { ticker: "SOXX", name: "半導体 ETF" },
   { ticker: "VOO", name: "S&P500 ETF" },
   { ticker: "QQQ", name: "NASDAQ ETF" },
+  { ticker: "3099.T", name: "伊勢丹三越HD" },
+  { ticker: "9204.T", name: "スカイマーク" },
 ];
 
 export const SECTOR_ETFS = [
