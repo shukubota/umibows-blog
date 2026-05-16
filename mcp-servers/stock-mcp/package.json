@@ -1,0 +1,27 @@
+{
+  "name": "stock-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP server exposing Yahoo Finance stock data to Claude (US stocks focus)",
+  "type": "module",
+  "bin": {
+    "stock-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "yahoo-finance2": "^3.14.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}
