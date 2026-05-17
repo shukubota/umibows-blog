@@ -18,6 +18,7 @@ export default function Home() {
     { id: "nn-viz", title: "Neural Network — Forward Propagation", path: "/nn-viz" },
     { id: "nn-train", title: "Neural Network — Live Training", path: "/nn-train" },
     { id: "stock-dashboard", title: "米国株分析ダッシュボード", path: "/stock-dashboard" },
+    { id: "liff", title: "LIFF Dev Playground", path: "/liff" },
   ];
 
   return (
