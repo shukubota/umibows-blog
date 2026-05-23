@@ -1,0 +1,33 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: umibows-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: umibows
+      MYSQL_USER: umibows
+      MYSQL_PASSWORD: umibows
+      TZ: Asia/Tokyo
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  sqs:
+    image: softwaremill/elasticmq-native:1.6.11
+    container_name: umibows-sqs
+    restart: unless-stopped
+    ports:
+      - "9324:9324"
+      - "9325:9325"
+    volumes:
+      - ./docker/elasticmq/elasticmq.conf:/opt/elasticmq.conf:ro
+
+volumes:
+  mysql-data:
