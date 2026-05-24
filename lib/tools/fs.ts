@@ -32,7 +32,7 @@ function resolveSafe(p: string): string {
 }
 
 const readSpec: ToolSpec = {
-  name: "fs.read",
+  name: "fs_read",
   description:
     "Read a UTF-8 file from the local filesystem. Only paths under the configured roots are allowed.",
   input_schema: {
@@ -68,7 +68,7 @@ const readHandler: ToolHandler = {
 };
 
 const writeSpec: ToolSpec = {
-  name: "fs.write",
+  name: "fs_write",
   description:
     "Write text content to a file under the configured roots. Creates parent directories.",
   input_schema: {

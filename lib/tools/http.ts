@@ -22,7 +22,7 @@ function assertHostAllowed(urlStr: string): URL {
 }
 
 const spec: ToolSpec = {
-  name: "http.fetch",
+  name: "http_fetch",
   description:
     "Send an HTTPS request to an allow-listed host and return status + body. Body is truncated to 200KB.",
   input_schema: {

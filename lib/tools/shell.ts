@@ -12,7 +12,7 @@ const ExecInput = z.object({
 });
 
 const spec: ToolSpec = {
-  name: "shell.exec",
+  name: "shell_exec",
   description:
     "Execute an allow-listed command with arguments (no shell, no interpolation). Returns exit code and captured stdout/stderr.",
   input_schema: {
