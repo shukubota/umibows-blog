@@ -7,33 +7,58 @@ import { complete } from "@/lib/llm/claude";
 import type { Message, SessionState, Usage } from "./types";
 
 let _db: Database.Database | null = null;
+let _diskAvailable: boolean | null = null;
+
+// In-memory fallback for serverless / read-only filesystems (e.g. Vercel /var/task).
+const memSessions = new Map<string, SessionState>();
+const memSummaries = new Map<string, MemoryHit[]>();
+
+function sqlitePath(): string {
+  // Vercel mounts the deploy bundle read-only at /var/task; only /tmp is writable.
+  // We still prefer in-memory unless an explicit path is configured because /tmp is
+  // ephemeral and per-instance.
+  if (process.env.VERCEL) return "/tmp/agent.db";
+  return config.memory.sqlitePath;
+}
 
 async function ensureDir(p: string): Promise<void> {
   await fs.mkdir(path.dirname(p), { recursive: true });
 }
 
-async function getDb(): Promise<Database.Database> {
+async function getDb(): Promise<Database.Database | null> {
   if (_db) return _db;
-  await ensureDir(config.memory.sqlitePath);
-  const db = new Database(config.memory.sqlitePath);
-  db.pragma("journal_mode = WAL");
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS sessions (
-      id TEXT PRIMARY KEY,
-      started_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL,
-      state_json TEXT NOT NULL
+  if (_diskAvailable === false) return null;
+  try {
+    const target = sqlitePath();
+    await ensureDir(target);
+    const db = new Database(target);
+    db.pragma("journal_mode = WAL");
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        started_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        state_json TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS summaries (
+        session_id TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        summary TEXT NOT NULL,
+        up_to_turn INTEGER NOT NULL,
+        PRIMARY KEY (session_id, up_to_turn)
+      );
+    `);
+    _db = db;
+    _diskAvailable = true;
+    return db;
+  } catch (e) {
+    _diskAvailable = false;
+    logger.warn(
+      { err: e instanceof Error ? e.message : String(e) },
+      "memory.disk_unavailable_fallback_to_inmemory"
     );
-    CREATE TABLE IF NOT EXISTS summaries (
-      session_id TEXT NOT NULL,
-      created_at INTEGER NOT NULL,
-      summary TEXT NOT NULL,
-      up_to_turn INTEGER NOT NULL,
-      PRIMARY KEY (session_id, up_to_turn)
-    );
-  `);
-  _db = db;
-  return db;
+    return null;
+  }
 }
 
 export interface MemoryHit {
@@ -46,6 +71,7 @@ export interface MemoryHit {
 export const memory = {
   async load(sessionId: string): Promise<SessionState | null> {
     const db = await getDb();
+    if (!db) return memSessions.get(sessionId) ?? null;
     const row = db.prepare("SELECT state_json FROM sessions WHERE id = ?").get(sessionId) as
       | { state_json: string }
       | undefined;
@@ -55,6 +81,10 @@ export const memory = {
 
   async save(state: SessionState): Promise<void> {
     const db = await getDb();
+    if (!db) {
+      memSessions.set(state.sessionId, JSON.parse(JSON.stringify(state)) as SessionState);
+      return;
+    }
     const now = Date.now();
     db.prepare(
       `INSERT INTO sessions (id, started_at, updated_at, state_json)
@@ -65,6 +95,10 @@ export const memory = {
 
   async recall(sessionId: string, k = 5): Promise<MemoryHit[]> {
     const db = await getDb();
+    if (!db) {
+      const arr = memSummaries.get(sessionId) ?? [];
+      return arr.slice(0, k);
+    }
     const rows = db
       .prepare(
         "SELECT session_id, summary, up_to_turn, created_at FROM summaries WHERE session_id = ? ORDER BY created_at DESC, up_to_turn DESC LIMIT ?"
@@ -85,6 +119,12 @@ export const memory = {
 
   async appendSummary(sessionId: string, summary: string, upToTurn: number): Promise<void> {
     const db = await getDb();
+    if (!db) {
+      const arr = memSummaries.get(sessionId) ?? [];
+      arr.unshift({ sessionId, summary, upToTurn, createdAt: Date.now() });
+      memSummaries.set(sessionId, arr.slice(0, 20));
+      return;
+    }
     db.prepare(
       "INSERT OR REPLACE INTO summaries (session_id, created_at, summary, up_to_turn) VALUES (?, ?, ?, ?)"
     ).run(sessionId, Date.now(), summary, upToTurn);
