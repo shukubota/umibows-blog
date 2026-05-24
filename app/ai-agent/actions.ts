@@ -2,6 +2,7 @@
 
 import { runAgent } from "@/lib/agent/loop";
 import { AgentError } from "@/lib/agent/errors";
+import { bootstrap } from "@/lib/agent/bootstrap";
 import type { Message } from "@/lib/agent/types";
 
 export interface ChatTurn {
@@ -15,6 +16,7 @@ export interface SendMessageResult {
   error?: string;
   usage?: { input_tokens: number; output_tokens: number };
   turns?: number;
+  sessionId?: string;
 }
 
 function toMessages(history: ChatTurn[], next: string): Message[] {
@@ -28,18 +30,21 @@ function toMessages(history: ChatTurn[], next: string): Message[] {
 
 export async function sendMessage(
   history: ChatTurn[],
-  input: string
+  input: string,
+  sessionId?: string
 ): Promise<SendMessageResult> {
   if (!input.trim()) {
     return { ok: false, error: "input is empty" };
   }
   try {
-    const result = await runAgent(toMessages(history, input));
+    bootstrap();
+    const result = await runAgent(toMessages(history, input), { sessionId });
     return {
       ok: true,
       reply: result.text,
       usage: result.usage,
       turns: result.turns,
+      sessionId: result.sessionId,
     };
   } catch (e) {
     if (e instanceof AgentError) {
