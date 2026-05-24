@@ -35,7 +35,7 @@ def load_dotenv_if_present() -> None:
 
     Looks for .env at <skill_root>/.env (one level above this script).
     Does NOT overwrite vars that are already set in the environment.
-    Format: simple `KEY=VALUE` per line. Comments starting with # ignored.
+    Format example: simple `KEY=VALUE` per line. Comments starting with # ignored.
     Quotes (single or double) around VALUE are stripped.
     """
     env_path = Path(__file__).resolve().parent.parent / ".env"

@@ -1,0 +1,17 @@
+name: stock-analyze
+version: 0.1.0
+description: 銘柄コードを受け取り、株価と指標を取得して短いレポートを返す
+triggers:
+  keywords:
+    - 株価
+    - stock
+    - 銘柄
+    - ticker
+tools:
+  - source: mcp
+    server: stock
+    name: get_quote
+  - source: mcp
+    server: stock
+    name: get_indicators
+prompt: SKILL.md
