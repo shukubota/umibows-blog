@@ -13,23 +13,12 @@ let _diskAvailable: boolean | null = null;
 const memSessions = new Map<string, SessionState>();
 const memSummaries = new Map<string, MemoryHit[]>();
 
-function sqlitePath(): string {
-  // Vercel mounts the deploy bundle read-only at /var/task; only /tmp is writable.
-  // We still prefer in-memory unless an explicit path is configured because /tmp is
-  // ephemeral and per-instance.
-  if (process.env.VERCEL) return "/tmp/agent.db";
-  return config.memory.sqlitePath;
-}
-
 async function ensureDir(p: string): Promise<void> {
   await fs.mkdir(path.dirname(p), { recursive: true });
 }
 
-async function getDb(): Promise<Database.Database | null> {
-  if (_db) return _db;
-  if (_diskAvailable === false) return null;
+async function tryOpenDb(target: string): Promise<Database.Database | null> {
   try {
-    const target = sqlitePath();
     await ensureDir(target);
     const db = new Database(target);
     db.pragma("journal_mode = WAL");
@@ -48,17 +37,32 @@ async function getDb(): Promise<Database.Database | null> {
         PRIMARY KEY (session_id, up_to_turn)
       );
     `);
-    _db = db;
-    _diskAvailable = true;
     return db;
-  } catch (e) {
-    _diskAvailable = false;
-    logger.warn(
-      { err: e instanceof Error ? e.message : String(e) },
-      "memory.disk_unavailable_fallback_to_inmemory"
-    );
+  } catch {
     return null;
   }
+}
+
+async function getDb(): Promise<Database.Database | null> {
+  if (_db) return _db;
+  if (_diskAvailable === false) return null;
+
+  // Try the configured path first (writable on local dev), then /tmp (writable on
+  // Vercel / Lambda), then give up and use the in-memory Map. No env-var detection:
+  // whichever directory we can actually write to wins.
+  const candidates = Array.from(new Set([config.memory.sqlitePath, "/tmp/agent.db"]));
+  for (const target of candidates) {
+    const db = await tryOpenDb(target);
+    if (db) {
+      _db = db;
+      _diskAvailable = true;
+      logger.info({ path: target }, "memory.sqlite_open");
+      return db;
+    }
+  }
+  _diskAvailable = false;
+  logger.warn({}, "memory.disk_unavailable_fallback_to_inmemory");
+  return null;
 }
 
 export interface MemoryHit {
