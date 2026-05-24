@@ -11,7 +11,11 @@ export function calculateRSI(prices: number[], period = 14): number {
   const changes = prices.slice(1).map((p, i) => p - prices[i]);
   const recent = changes.slice(-period);
   const gains = recent.filter((c) => c > 0).reduce((a, b) => a + b, 0) / period;
-  const losses = recent.filter((c) => c < 0).map(Math.abs).reduce((a, b) => a + b, 0) / period;
+  const losses =
+    recent
+      .filter((c) => c < 0)
+      .map(Math.abs)
+      .reduce((a, b) => a + b, 0) / period;
   if (losses === 0) return 100;
   return 100 - 100 / (1 + gains / losses);
 }

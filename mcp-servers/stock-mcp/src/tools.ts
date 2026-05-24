@@ -122,7 +122,7 @@ export const toolDefs = [
         ]);
         if (closes.length < 200) {
           return fail(
-            `Not enough history for ${symbol} (got ${closes.length} closes, need >= 200 for MA200)`,
+            `Not enough history for ${symbol} (got ${closes.length} closes, need >= 200 for MA200)`
           );
         }
         const ind = computeIndicators(closes);
@@ -146,11 +146,7 @@ export const toolDefs = [
     inputSchema: z.object({
       symbols: z.record(z.string()).optional(),
     }),
-    handler: async ({
-      symbols,
-    }: {
-      symbols?: Record<string, string>;
-    }): Promise<TextResult> => {
+    handler: async ({ symbols }: { symbols?: Record<string, string> }): Promise<TextResult> => {
       const targets = symbols ?? DEFAULT_MARKET_SYMBOLS;
       const entries = Object.entries(targets);
       const results = await Promise.all(
@@ -160,7 +156,7 @@ export const toolDefs = [
           } catch (err) {
             return [key, { symbol: sym, error: (err as Error).message }] as const;
           }
-        }),
+        })
       );
       return ok(Object.fromEntries(results));
     },
@@ -257,13 +253,7 @@ export const toolDefs = [
       query: z.string().min(1),
       limit: z.number().int().min(1).max(20).default(5).optional(),
     }),
-    handler: async ({
-      query,
-      limit,
-    }: {
-      query: string;
-      limit?: number;
-    }): Promise<TextResult> => {
+    handler: async ({ query, limit }: { query: string; limit?: number }): Promise<TextResult> => {
       try {
         const results = await searchSymbols(query, limit ?? 5);
         return ok({ query, results });

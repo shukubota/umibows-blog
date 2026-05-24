@@ -158,6 +158,45 @@ const PRESETS: Preset[] = [
   },
 ];
 
+// Compute accelerations for all bodies under mutual gravity with a softening term.
+const computeAccelerations = (bodies: Body[], gravity: number, eps2: number) => {
+  for (let i = 0; i < bodies.length; i++) {
+    bodies[i].ax = 0;
+    bodies[i].ay = 0;
+  }
+  for (let i = 0; i < bodies.length; i++) {
+    for (let j = i + 1; j < bodies.length; j++) {
+      const dx = bodies[j].x - bodies[i].x;
+      const dy = bodies[j].y - bodies[i].y;
+      const r2 = dx * dx + dy * dy + eps2;
+      const invR = 1 / Math.sqrt(r2);
+      const invR3 = invR / r2;
+      const f = gravity * invR3;
+      bodies[i].ax += f * bodies[j].mass * dx;
+      bodies[i].ay += f * bodies[j].mass * dy;
+      bodies[j].ax -= f * bodies[i].mass * dx;
+      bodies[j].ay -= f * bodies[i].mass * dy;
+    }
+  }
+};
+
+// Velocity Verlet: symplectic, conserves orbital energy far better than RK4 here.
+const step = (bodies: Body[], dt: number, gravity: number, eps2: number) => {
+  for (let i = 0; i < bodies.length; i++) {
+    const b = bodies[i];
+    b.x += b.vx * dt + 0.5 * b.ax * dt * dt;
+    b.y += b.vy * dt + 0.5 * b.ay * dt * dt;
+  }
+  const prevAx = bodies.map((b) => b.ax);
+  const prevAy = bodies.map((b) => b.ay);
+  computeAccelerations(bodies, gravity, eps2);
+  for (let i = 0; i < bodies.length; i++) {
+    const b = bodies[i];
+    b.vx += 0.5 * (prevAx[i] + b.ax) * dt;
+    b.vy += 0.5 * (prevAy[i] + b.ay) * dt;
+  }
+};
+
 const PlanetMotion: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [presetId, setPresetId] = useState<PresetId>("solar");
@@ -216,45 +255,6 @@ const PlanetMotion: React.FC = () => {
   const handleReset = () => {
     loadPreset(presetId);
     setIsPlaying(true);
-  };
-
-  // Compute accelerations for all bodies under mutual gravity with a softening term.
-  const computeAccelerations = (bodies: Body[], gravity: number, eps2: number) => {
-    for (let i = 0; i < bodies.length; i++) {
-      bodies[i].ax = 0;
-      bodies[i].ay = 0;
-    }
-    for (let i = 0; i < bodies.length; i++) {
-      for (let j = i + 1; j < bodies.length; j++) {
-        const dx = bodies[j].x - bodies[i].x;
-        const dy = bodies[j].y - bodies[i].y;
-        const r2 = dx * dx + dy * dy + eps2;
-        const invR = 1 / Math.sqrt(r2);
-        const invR3 = invR / r2;
-        const f = gravity * invR3;
-        bodies[i].ax += f * bodies[j].mass * dx;
-        bodies[i].ay += f * bodies[j].mass * dy;
-        bodies[j].ax -= f * bodies[i].mass * dx;
-        bodies[j].ay -= f * bodies[i].mass * dy;
-      }
-    }
-  };
-
-  // Velocity Verlet: symplectic, conserves orbital energy far better than RK4 here.
-  const step = (bodies: Body[], dt: number, gravity: number, eps2: number) => {
-    for (let i = 0; i < bodies.length; i++) {
-      const b = bodies[i];
-      b.x += b.vx * dt + 0.5 * b.ax * dt * dt;
-      b.y += b.vy * dt + 0.5 * b.ay * dt * dt;
-    }
-    const prevAx = bodies.map((b) => b.ax);
-    const prevAy = bodies.map((b) => b.ay);
-    computeAccelerations(bodies, gravity, eps2);
-    for (let i = 0; i < bodies.length; i++) {
-      const b = bodies[i];
-      b.vx += 0.5 * (prevAx[i] + b.ax) * dt;
-      b.vy += 0.5 * (prevAy[i] + b.ay) * dt;
-    }
   };
 
   const draw = useCallback(() => {
@@ -343,7 +343,6 @@ const PlanetMotion: React.FC = () => {
         ctx.fillText(b.label, px + b.radius + 4, py - b.radius - 4);
       }
     }
-
   }, []);
 
   // Single animation loop. Uses a local `running` flag so a leaked frame after
