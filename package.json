@@ -9,7 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench:agent": "tsx scripts/bench.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
@@ -22,20 +25,26 @@
     "@langchain/core": "^1.1.44",
     "@langchain/langgraph": "^1.2.9",
     "@line/liff": "^2.29.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@mui/material": "^5.15.19",
     "@vercel/oidc": "^3.4.0",
+    "better-sqlite3": "^12.10.0",
     "framer-motion": "^12.38.0",
     "google-auth-library": "^10.6.2",
     "katex": "^0.16.27",
     "lucide-react": "^1.14.0",
     "next": "14.2.3",
     "onnxruntime-node": "^1.25.1",
+    "pino": "^10.3.1",
     "react": "^18",
     "react-dom": "^18",
     "recharts": "^3.8.1",
-    "yahoo-finance2": "^3.14.0"
+    "yahoo-finance2": "^3.14.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/katex": "^0.16.7",
     "@types/node": "^20",
     "@types/react": "^18",
@@ -47,6 +56,8 @@
     "postcss": "^8",
     "prettier": "^3.8.1",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "tsx": "^4.22.3",
+    "typescript": "^5",
+    "vitest": "^4.1.7"
   }
 }

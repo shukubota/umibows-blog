@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "stock": {
+      "transport": "stdio",
+      "command": "node",
+      "args": ["./mcp-servers/stock-mcp/dist/index.js"]
+    },
+    "filesystem": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "./workspace"]
+    }
+  }
+}
