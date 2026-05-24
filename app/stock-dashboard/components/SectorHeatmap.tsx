@@ -20,10 +20,7 @@ export default function SectorHeatmap({ sectors }: Props) {
           const meta = SECTOR_ETFS.find((e) => e.ticker === s.symbol);
           const pct = s.changePercent;
           return (
-            <div
-              key={s.symbol}
-              className={`rounded p-2 text-center ${cellColor(pct)}`}
-            >
+            <div key={s.symbol} className={`rounded p-2 text-center ${cellColor(pct)}`}>
               <div className="text-xs font-bold">{meta?.name ?? s.symbol}</div>
               <div className="text-xs font-mono mt-0.5">
                 {pct >= 0 ? "+" : ""}
