@@ -39,14 +39,14 @@ docker compose down -v         # MySQL のデータも削除
 
 #### MySQL
 
-| 項目             | 値                                               |
-| ---------------- | ------------------------------------------------ |
-| ホスト           | `127.0.0.1`                                      |
-| ポート           | `3306`                                           |
-| DB               | `umibows`                                        |
-| ユーザ           | `umibows` / パスワード `umibows`                 |
-| root             | パスワード `root`                                |
-| URL 例 (example) | `mysql://umibows:umibows@127.0.0.1:3306/umibows` |
+| 項目   | 値                                               |
+| ------ | ------------------------------------------------ |
+| ホスト | `127.0.0.1`                                      |
+| ポート | `3306`                                           |
+| DB     | `umibows`                                        |
+| ユーザ | `umibows` / パスワード `umibows`                 |
+| root   | パスワード `root`                                |
+| URL 例 | `mysql://umibows:umibows@127.0.0.1:3306/umibows` |
 
 接続確認:
 
