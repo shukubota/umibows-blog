@@ -16,7 +16,10 @@ export default function EarningsCalendar({ events }: Props) {
             const d = new Date(e.date);
             const dateStr = `${d.getMonth() + 1}/${d.getDate()}(${DAYS[d.getDay()]})`;
             return (
-              <div key={e.symbol} className="flex items-center justify-between py-2 border-b border-gray-800 last:border-b-0">
+              <div
+                key={e.symbol}
+                className="flex items-center justify-between py-2 border-b border-gray-800 last:border-b-0"
+              >
                 <div>
                   <span className="text-white font-semibold text-sm">{e.symbol}</span>
                   <span className="text-gray-500 text-xs ml-2">{e.name}</span>
@@ -24,7 +27,9 @@ export default function EarningsCalendar({ events }: Props) {
                 <div className="text-right">
                   <div className="text-gray-300 text-sm font-mono">{dateStr}</div>
                   {e.epsEstimate !== null && (
-                    <div className="text-gray-500 text-xs">予想EPS: ${e.epsEstimate.toFixed(2)}</div>
+                    <div className="text-gray-500 text-xs">
+                      予想EPS: ${e.epsEstimate.toFixed(2)}
+                    </div>
                   )}
                 </div>
               </div>

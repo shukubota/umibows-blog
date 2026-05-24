@@ -1,8 +1,8 @@
 /**
  * Minimal evaluation bench for the self-built agent.
  *
- * Usage:
- *   ANTHROPIC_API_KEY=... npx tsx scripts/bench.ts
+ * Example usage:
+ *   export the ANTHROPIC_API_KEY env var, then run: npx tsx scripts/bench.ts
  *
  * Reads scripts/bench-cases.json (created lazily with defaults if missing),
  * runs each case via runAgent (with builtins registered), and prints a
