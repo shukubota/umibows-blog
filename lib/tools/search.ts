@@ -9,7 +9,7 @@ const Input = z.object({
 });
 
 const spec: ToolSpec = {
-  name: "search.web",
+  name: "search_web",
   description: "Search the web. The provider is configurable; the stub returns no results.",
   input_schema: {
     type: "object",
@@ -34,7 +34,7 @@ const handler: ToolHandler = {
         ok: true,
         content: JSON.stringify({
           results: [],
-          note: "search.web provider=stub. Configure agent.config.ts to enable.",
+          note: "search_web provider=stub. Configure agent.config.ts to enable.",
         }),
       };
     }
