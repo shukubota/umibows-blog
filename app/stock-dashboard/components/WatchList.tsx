@@ -14,7 +14,8 @@ function fmt(n: number, digits = 2) {
 function VolumeBadge({ volume, avgVolume }: { volume: number; avgVolume: number }) {
   if (!avgVolume || !volume) return null;
   const ratio = volume / avgVolume;
-  if (ratio >= 1.5) return <span className="text-xs text-yellow-400 ml-1">出来高↑{ratio.toFixed(1)}x</span>;
+  if (ratio >= 1.5)
+    return <span className="text-xs text-yellow-400 ml-1">出来高↑{ratio.toFixed(1)}x</span>;
   return null;
 }
 
@@ -56,24 +57,39 @@ export default function WatchList({ stocks }: Props) {
                       <VolumeBadge volume={s.volume} avgVolume={s.avgVolume} />
                     </td>
                     <td className="text-right pr-4 font-mono text-white">${fmt(s.price)}</td>
-                    <td className={`text-right pr-4 font-mono ${s.changePercent >= 0 ? "text-green-400" : "text-red-400"}`}>
-                      {s.changePercent >= 0 ? "+" : ""}{fmt(s.changePercent)}%
+                    <td
+                      className={`text-right pr-4 font-mono ${s.changePercent >= 0 ? "text-green-400" : "text-red-400"}`}
+                    >
+                      {s.changePercent >= 0 ? "+" : ""}
+                      {fmt(s.changePercent)}%
                     </td>
-                    <td className={`text-right pr-4 font-mono text-xs ${isNaN(ma200diff) ? "text-gray-500" : ma200diff >= 0 ? "text-green-400" : "text-red-400"}`}>
-                      {isNaN(ma200diff) ? "—" : `${ma200diff >= 0 ? "+" : ""}${ma200diff.toFixed(1)}%`}
+                    <td
+                      className={`text-right pr-4 font-mono text-xs ${isNaN(ma200diff) ? "text-gray-500" : ma200diff >= 0 ? "text-green-400" : "text-red-400"}`}
+                    >
+                      {isNaN(ma200diff)
+                        ? "—"
+                        : `${ma200diff >= 0 ? "+" : ""}${ma200diff.toFixed(1)}%`}
                     </td>
-                    <td className={`text-right pr-4 font-mono text-xs ${isNaN(s.rsi) ? "text-gray-500" : s.rsi >= 70 ? "text-red-400" : s.rsi <= 30 ? "text-green-400" : "text-gray-300"}`}>
+                    <td
+                      className={`text-right pr-4 font-mono text-xs ${isNaN(s.rsi) ? "text-gray-500" : s.rsi >= 70 ? "text-red-400" : s.rsi <= 30 ? "text-green-400" : "text-gray-300"}`}
+                    >
                       {fmt(s.rsi, 0)}
                     </td>
                     <td className="text-right pr-4">
                       {!isNaN(s.ma5) && !isNaN(s.ma25) && (
-                        <span className={s.ma5AboveMA25 ? "text-green-400 text-xs" : "text-red-400 text-xs"}>
+                        <span
+                          className={
+                            s.ma5AboveMA25 ? "text-green-400 text-xs" : "text-red-400 text-xs"
+                          }
+                        >
                           {s.ma5AboveMA25 ? "↑ 上抜け" : "↓ 下抜け"}
                         </span>
                       )}
                     </td>
                     <td className="text-right">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${meta.bg} ${meta.text}`}>
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs font-bold ${meta.bg} ${meta.text}`}
+                      >
                         {meta.label}
                       </span>
                     </td>

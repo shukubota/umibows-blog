@@ -5,7 +5,7 @@ const store = new Map<string, Entry<unknown>>();
 export async function withCache<T>(
   key: string,
   ttlSeconds: number,
-  loader: () => Promise<T>,
+  loader: () => Promise<T>
 ): Promise<T> {
   const now = Date.now();
   const existing = store.get(key) as Entry<T> | undefined;

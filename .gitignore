@@ -56,3 +56,7 @@ scripts/igo/checkpoints/*
 !scripts/igo/checkpoints/kgs_pretrain.pt
 !scripts/igo/checkpoints/iter_101.pt
 scripts/igo/__pycache__/
+
+# ai-agent runtime data (SQLite)
+/.data/
+

@@ -49,9 +49,7 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 2): Promise<T> {
 
 export async function getQuote(symbol: string): Promise<Quote> {
   return withCache(`quote:${symbol}`, 60, async () => {
-    const q: any = await withRetry(() =>
-      yf.quote(symbol, {}, { validateResult: false }),
-    );
+    const q: any = await withRetry(() => yf.quote(symbol, {}, { validateResult: false }));
     return {
       symbol,
       name: (q.shortName ?? q.longName ?? symbol) as string,
@@ -76,28 +74,26 @@ export async function getQuotes(symbols: string[]): Promise<QuoteOrError[]> {
       } catch (err) {
         return { symbol: s, error: (err as Error).message ?? "fetch failed" };
       }
-    }),
+    })
   );
 }
 
 export async function getHistorical(
   symbol: string,
   days: number,
-  interval: "1d" | "1wk" | "1mo" = "1d",
+  interval: "1d" | "1wk" | "1mo" = "1d"
 ): Promise<Candle[]> {
   return withCache(`hist:${symbol}:${days}:${interval}`, 1800, async () => {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - days);
     const rows: any[] = await withRetry(() =>
-      yf.historical(symbol, { period1: start, period2: end, interval }, { validateResult: false }),
+      yf.historical(symbol, { period1: start, period2: end, interval }, { validateResult: false })
     );
     return rows
       .filter((r) => typeof r.close === "number")
       .map((r) => ({
-        date: (r.date instanceof Date ? r.date : new Date(r.date))
-          .toISOString()
-          .slice(0, 10),
+        date: (r.date instanceof Date ? r.date : new Date(r.date)).toISOString().slice(0, 10),
         open: r.open ?? NaN,
         high: r.high ?? NaN,
         low: r.low ?? NaN,
@@ -122,7 +118,7 @@ export async function getEarningsDate(symbol: string): Promise<EarningsInfo | nu
   return withCache(`earnings:${symbol}`, 3600, async () => {
     try {
       const summary: any = await withRetry(() =>
-        yf.quoteSummary(symbol, { modules: ["calendarEvents"] }, { validateResult: false }),
+        yf.quoteSummary(symbol, { modules: ["calendarEvents"] }, { validateResult: false })
       );
       const earnings = summary?.calendarEvents?.earnings;
       const list: any[] = earnings?.earningsDate ?? [];
