@@ -55,7 +55,12 @@ export default function StockChart({ symbol, prices }: Props) {
         <ComposedChart data={priceData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis dataKey="i" hide />
-          <YAxis domain={[priceMin, priceMax]} tick={{ fill: "#9ca3af", fontSize: 10 }} width={55} tickFormatter={(v) => `$${v.toFixed(0)}`} />
+          <YAxis
+            domain={[priceMin, priceMax]}
+            tick={{ fill: "#9ca3af", fontSize: 10 }}
+            width={55}
+            tickFormatter={(v) => `$${v.toFixed(0)}`}
+          />
           <Tooltip
             contentStyle={{ background: "#1f2937", border: "1px solid #374151", borderRadius: 6 }}
             labelStyle={{ color: "#9ca3af" }}
@@ -63,10 +68,40 @@ export default function StockChart({ symbol, prices }: Props) {
             formatter={(v) => [`$${Number(v).toFixed(2)}`]}
             labelFormatter={() => ""}
           />
-          <Line type="monotone" dataKey="close" stroke="#60a5fa" dot={false} strokeWidth={1.5} name="価格" />
-          <Line type="monotone" dataKey="ma5" stroke="#fbbf24" dot={false} strokeWidth={1} strokeDasharray="4 2" name="MA5" />
-          <Line type="monotone" dataKey="ma25" stroke="#a78bfa" dot={false} strokeWidth={1} strokeDasharray="4 2" name="MA25" />
-          <Line type="monotone" dataKey="ma200" stroke="#f87171" dot={false} strokeWidth={1} name="MA200" />
+          <Line
+            type="monotone"
+            dataKey="close"
+            stroke="#60a5fa"
+            dot={false}
+            strokeWidth={1.5}
+            name="価格"
+          />
+          <Line
+            type="monotone"
+            dataKey="ma5"
+            stroke="#fbbf24"
+            dot={false}
+            strokeWidth={1}
+            strokeDasharray="4 2"
+            name="MA5"
+          />
+          <Line
+            type="monotone"
+            dataKey="ma25"
+            stroke="#a78bfa"
+            dot={false}
+            strokeWidth={1}
+            strokeDasharray="4 2"
+            name="MA25"
+          />
+          <Line
+            type="monotone"
+            dataKey="ma200"
+            stroke="#f87171"
+            dot={false}
+            strokeWidth={1}
+            name="MA200"
+          />
         </ComposedChart>
       </ResponsiveContainer>
 
@@ -84,16 +119,33 @@ export default function StockChart({ symbol, prices }: Props) {
           />
           <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 3" />
           <ReferenceLine y={30} stroke="#22c55e" strokeDasharray="3 3" />
-          <Line type="monotone" dataKey="rsi" stroke="#c084fc" dot={false} strokeWidth={1.5} name="RSI" />
+          <Line
+            type="monotone"
+            dataKey="rsi"
+            stroke="#c084fc"
+            dot={false}
+            strokeWidth={1.5}
+            name="RSI"
+          />
         </ComposedChart>
       </ResponsiveContainer>
 
       <div className="flex gap-4 text-xs text-gray-500">
-        <span><span className="text-blue-400">—</span> 価格</span>
-        <span><span className="text-yellow-400">- -</span> MA5</span>
-        <span><span className="text-purple-400">- -</span> MA25</span>
-        <span><span className="text-red-400">—</span> MA200</span>
-        <span><span className="text-purple-300">—</span> RSI</span>
+        <span>
+          <span className="text-blue-400">—</span> 価格
+        </span>
+        <span>
+          <span className="text-yellow-400">- -</span> MA5
+        </span>
+        <span>
+          <span className="text-purple-400">- -</span> MA25
+        </span>
+        <span>
+          <span className="text-red-400">—</span> MA200
+        </span>
+        <span>
+          <span className="text-purple-300">—</span> RSI
+        </span>
       </div>
     </div>
   );

@@ -2,12 +2,12 @@
 
 ## 方式比較
 
-| | 方式A: SA Key | 方式B: WIF（推奨） |
-|---|---|---|
-| 長期クレデンシャル | **あり**（漏洩リスク） | **なし** |
-| Vercel環境変数の秘密情報 | SA Key JSON全体 | なし（WIF設定ファイルは公開可） |
-| トークン有効期限 | 1時間のID Token | 数分の短命トークン |
-| セットアップ難易度 | 低 | 中 |
+|                          | 方式A: SA Key          | 方式B: WIF（推奨）              |
+| ------------------------ | ---------------------- | ------------------------------- |
+| 長期クレデンシャル       | **あり**（漏洩リスク） | **なし**                        |
+| Vercel環境変数の秘密情報 | SA Key JSON全体        | なし（WIF設定ファイルは公開可） |
+| トークン有効期限         | 1時間のID Token        | 数分の短命トークン              |
+| セットアップ難易度       | 低                     | 中                              |
 
 > **方式Bが本命。方式Aは比較のための参考実装。**
 
@@ -55,11 +55,11 @@ gcloud iam service-accounts add-iam-policy-binding "vercel-igo-invoker@${GOOGLE_
 
 必要な環境変数：
 
-| 変数名 | 値 |
-|---|---|
-| `IGO_API_URL` | `https://igo-api-fo4po2vqhq-an.a.run.app` |
-| `GCP_WIF_PROVIDER` | `projects/899188349213/locations/global/workloadIdentityPools/vercel-pool/providers/vercel-provider` |
-| `GCP_SERVICE_ACCOUNT` | `vercel-igo-invoker@empowerme-bb3c5.iam.gserviceaccount.com` |
+| 変数名                | 値                                                                                                   |
+| --------------------- | ---------------------------------------------------------------------------------------------------- |
+| `IGO_API_URL`         | `https://igo-api-fo4po2vqhq-an.a.run.app`                                                            |
+| `GCP_WIF_PROVIDER`    | `projects/899188349213/locations/global/workloadIdentityPools/vercel-pool/providers/vercel-provider` |
+| `GCP_SERVICE_ACCOUNT` | `vercel-igo-invoker@empowerme-bb3c5.iam.gserviceaccount.com`                                         |
 
 ### コード変更（方式B）
 
@@ -124,13 +124,13 @@ Vercel Server Action
 
 ## 登場人物
 
-| 役割 | 内容 |
-|---|---|
-| Cloud Run | 認証必須（`--no-allow-unauthenticated`）のAPIサーバー |
-| Service Account | `vercel-igo-invoker` — Cloud Runを呼ぶ権限だけを持つ |
-| SA Key JSON | Vercelの環境変数に置く秘密鍵 |
-| ID Token | SA Keyから生成する短命トークン（有効期限1時間）。audienceはCloud RunのURL |
-| google-auth-library | Node.js SDKでID Tokenを取得するライブラリ |
+| 役割                | 内容                                                                      |
+| ------------------- | ------------------------------------------------------------------------- |
+| Cloud Run           | 認証必須（`--no-allow-unauthenticated`）のAPIサーバー                     |
+| Service Account     | `vercel-igo-invoker` — Cloud Runを呼ぶ権限だけを持つ                      |
+| SA Key JSON         | Vercelの環境変数に置く秘密鍵                                              |
+| ID Token            | SA Keyから生成する短命トークン（有効期限1時間）。audienceはCloud RunのURL |
+| google-auth-library | Node.js SDKでID Tokenを取得するライブラリ                                 |
 
 ---
 
@@ -179,10 +179,10 @@ cat /tmp/vercel-igo-invoker-key.json
 
 Vercelのダッシュボード or CLIで環境変数を追加：
 
-| 変数名 | 値 |
-|---|---|
-| `GOOGLE_SA_KEY` | SA Key JSONの中身（全体をそのままペースト） |
-| `IGO_API_URL` | `https://igo-api-fo4po2vqhq-an.a.run.app`（変更なし） |
+| 変数名          | 値                                                    |
+| --------------- | ----------------------------------------------------- |
+| `GOOGLE_SA_KEY` | SA Key JSONの中身（全体をそのままペースト）           |
+| `IGO_API_URL`   | `https://igo-api-fo4po2vqhq-an.a.run.app`（変更なし） |
 
 ---
 

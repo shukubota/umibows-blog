@@ -20,7 +20,12 @@ async function getSession() {
   console.log("[igo-api] loading model:", MODEL_PATH);
   ort = await import("onnxruntime-node");
   session = await ort.InferenceSession.create(MODEL_PATH);
-  console.log("[igo-api] model loaded. inputs:", session.inputNames, "outputs:", session.outputNames);
+  console.log(
+    "[igo-api] model loaded. inputs:",
+    session.inputNames,
+    "outputs:",
+    session.outputNames
+  );
   return session;
 }
 
@@ -28,7 +33,10 @@ getSession().catch((e) => console.error("[igo-api] warmup failed:", e));
 
 // ── NN inference: returns { policy: Float32Array[81], value: number } ─────────
 
-async function runNN(grid: Grid, color: StoneColor): Promise<{ policy: Float32Array; value: number }> {
+async function runNN(
+  grid: Grid,
+  color: StoneColor
+): Promise<{ policy: Float32Array; value: number }> {
   const sess = await getSession();
   const featureData = boardToFeatures(grid, color);
   const tensor = new ort!.Tensor("float32", featureData, [1, N_PLANES, BOARD_SIZE, BOARD_SIZE]);
@@ -41,7 +49,10 @@ async function runNN(grid: Grid, color: StoneColor): Promise<{ policy: Float32Ar
   for (let i = 0; i < logits.length; i++) if (logits[i] > maxL) maxL = logits[i];
   let sumExp = 0;
   const policy = new Float32Array(logits.length);
-  for (let i = 0; i < logits.length; i++) { policy[i] = Math.exp(logits[i] - maxL); sumExp += policy[i]; }
+  for (let i = 0; i < logits.length; i++) {
+    policy[i] = Math.exp(logits[i] - maxL);
+    sumExp += policy[i];
+  }
   for (let i = 0; i < logits.length; i++) policy[i] /= sumExp;
 
   return { policy, value };
@@ -66,7 +77,7 @@ function q(node: MctsNode): number {
 }
 
 function puctScore(node: MctsNode, parentVisits: number): number {
-  return q(node) + C_PUCT * node.prior * Math.sqrt(parentVisits) / (1 + node.visits);
+  return q(node) + (C_PUCT * node.prior * Math.sqrt(parentVisits)) / (1 + node.visits);
 }
 
 // ── Single MCTS simulation (async: calls NN at leaf) ─────────────────────────
@@ -91,7 +102,12 @@ async function simulate(
     let bestMove!: Point;
     for (const [key, { move, node: child }] of node.children) {
       const s = puctScore(child, node.visits);
-      if (s > bestScore) { bestScore = s; bestKey = key; bestChild = child; bestMove = move; }
+      if (s > bestScore) {
+        bestScore = s;
+        bestKey = key;
+        bestChild = child;
+        bestMove = move;
+      }
     }
     const { nextGrid } = applyMove(curGrid, bestMove, curColor);
     curPrev = curGrid;
@@ -153,12 +169,15 @@ app.post("/predict", async (req, res) => {
     let bestMove: Point | null = null;
     let bestVisits = -1;
     for (const { move, node } of root.children.values()) {
-      if (node.visits > bestVisits) { bestVisits = node.visits; bestMove = move; }
+      if (node.visits > bestVisits) {
+        bestVisits = node.visits;
+        bestMove = move;
+      }
     }
 
     console.log(
       `[igo-api] move: ${bestMove ? `(${bestMove.row},${bestMove.col})` : "null"} ` +
-      `sims=${MCTS_SIMS} in ${Date.now() - t0}ms`
+        `sims=${MCTS_SIMS} in ${Date.now() - t0}ms`
     );
 
     res.json({ move: bestMove });

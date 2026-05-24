@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import YahooFinance from "yahoo-finance2";
 import { computeIndicators } from "./indicators";
 
@@ -54,7 +53,7 @@ async function safeHistorical(symbol: string, days = 250): Promise<number[]> {
     const rows: any[] = await yahooFinance.historical(
       symbol,
       { period1: start, period2: end, interval: "1d" },
-      { validateResult: false },
+      { validateResult: false }
     );
     return rows.map((r) => r.close).filter((v: any) => typeof v === "number");
   } catch {
@@ -63,11 +62,11 @@ async function safeHistorical(symbol: string, days = 250): Promise<number[]> {
 }
 
 export async function fetchMarketOverview(
-  symbols: Record<string, string>,
+  symbols: Record<string, string>
 ): Promise<Record<string, QuoteData | null>> {
   const entries = Object.entries(symbols);
   const results = await Promise.all(
-    entries.map(([key, sym]) => safeQuote(sym).then((q) => [key, q] as const)),
+    entries.map(([key, sym]) => safeQuote(sym).then((q) => [key, q] as const))
   );
   return Object.fromEntries(results);
 }
@@ -109,7 +108,7 @@ export async function fetchWatchlistDetail(tickers: string[]): Promise<StockDeta
         aboveMA200: ind?.aboveMA200 ?? false,
         ma5AboveMA25: ind?.ma5AboveMA25 ?? false,
       };
-    }),
+    })
   );
 }
 
@@ -121,7 +120,7 @@ export async function fetchEarningsCalendar(tickers: string[]): Promise<Earnings
         const summary: any = await yahooFinance.quoteSummary(
           symbol,
           { modules: ["calendarEvents"] },
-          { validateResult: false },
+          { validateResult: false }
         );
         const earnings = summary?.calendarEvents?.earnings;
         if (earnings?.earningsDate?.length > 0) {
@@ -138,7 +137,7 @@ export async function fetchEarningsCalendar(tickers: string[]): Promise<Earnings
       } catch {
         // skip
       }
-    }),
+    })
   );
   return events.sort((a, b) => a.date.getTime() - b.date.getTime());
 }

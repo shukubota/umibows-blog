@@ -13,7 +13,7 @@ export function createServer(): McpServer {
       def.description,
       def.inputSchema.shape,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      def.handler as any,
+      def.handler as any
     );
   }
 
