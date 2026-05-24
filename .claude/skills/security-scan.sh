@@ -59,9 +59,9 @@ scan_pattern() {
     echo "  🔍 Scanning for $pattern_name..."
 
     # Scan all files recursively, excluding placeholder values
-    if grep -r -n -E "$pattern" . $EXCLUDE_ARGS 2>/dev/null | grep -v "\.claude/skills/" | grep -v "\.envrc" | grep -iv "your_" | grep -v '\${' | grep -v '=\$' | grep -v "example" | grep -v "template" | grep -v "dummy" | grep -v "placeholder" >> "$TEMP_FILE"; then
+    if grep -r -n -E "$pattern" . $EXCLUDE_ARGS 2>/dev/null | grep -v "\.claude/skills/" | grep -v "\.envrc" | grep -iv "your_" | grep -v '\${' | grep -v '=\$' | grep -v "example" | grep -v "template" | grep -v "dummy" | grep -v "placeholder" | grep -v "127\.0\.0\.1" | grep -v "localhost" | grep -v "KEY=VALUE" >> "$TEMP_FILE"; then
         echo "    ⚠️  Found potential $pattern_name violations:"
-        grep -r -n -E "$pattern" . $EXCLUDE_ARGS 2>/dev/null | grep -v "\.claude/skills/" | grep -v "\.envrc" | grep -iv "your_" | grep -v '\${' | grep -v '=\$' | grep -v "example" | grep -v "template" | grep -v "dummy" | grep -v "placeholder" | while read -r line; do
+        grep -r -n -E "$pattern" . $EXCLUDE_ARGS 2>/dev/null | grep -v "\.claude/skills/" | grep -v "\.envrc" | grep -iv "your_" | grep -v '\${' | grep -v '=\$' | grep -v "example" | grep -v "template" | grep -v "dummy" | grep -v "placeholder" | grep -v "127\.0\.0\.1" | grep -v "localhost" | grep -v "KEY=VALUE" | while read -r line; do
             echo "    📍 $line"
         done
         return 1

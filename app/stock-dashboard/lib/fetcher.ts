@@ -1,4 +1,3 @@
-/* eslint-disable */
 import YahooFinance from "yahoo-finance2";
 import { computeIndicators } from "./indicators";
 
