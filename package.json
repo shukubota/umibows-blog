@@ -15,7 +15,7 @@
     "bench:agent": "tsx scripts/bench.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.2",
+    "@anthropic-ai/sdk": "^0.104.1",
     "@anthropic-ai/vertex-sdk": "^0.16.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
