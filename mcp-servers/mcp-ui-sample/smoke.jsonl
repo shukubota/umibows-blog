@@ -2,4 +2,4 @@
 {"jsonrpc":"2.0","method":"notifications/initialized"}
 {"jsonrpc":"2.0","id":2,"method":"resources/list","params":{}}
 {"jsonrpc":"2.0","id":3,"method":"tools/list","params":{}}
-{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"show_spot","arguments":{"area":"鎌倉"}}}
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"show_mahjong_hand","arguments":{"tiles":["1p","2p","3p","3m","4m","5m","chun","chun","hatsu","hatsu","ton","nan","sha","pei"]}}}
