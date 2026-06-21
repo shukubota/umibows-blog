@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>何切る</title>
+    <style>
+      html, body { margin: 0; font-family: "Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif; }
+      #app { padding: 4px; }
+      .label { font-size: 13px; color: #777; margin: 10px 2px 6px; }
+      .hand { display: flex; flex-wrap: wrap; gap: 3px; align-items: flex-end; }
+      .hand .t svg { height: 70px; width: auto; display: block; }
+      .recos { display: flex; flex-wrap: wrap; gap: 14px; }
+      .reco { text-align: center; }
+      .reco svg { height: 52px; width: auto; display: block; margin: 0 auto; }
+      .reco .u { font-size: 12px; color: #555; margin-top: 4px; }
+      .meta { font-size: 15px; font-weight: 600; margin: 4px 2px; }
+      .warn { font-size: 12px; color: #c8342f; margin: 6px 2px; }
+    </style>
+  </head>
+  <body>
+    <div id="app">読み込み中…</div>
+    <script type="module" src="./hand.ts"></script>
+  </body>
+</html>
