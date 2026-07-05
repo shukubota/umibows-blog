@@ -72,11 +72,13 @@ function extract(result: CallToolResult): Hand | null {
   return h && Array.isArray(h.tiles) ? h : null;
 }
 
+let rendered = false;
+
 const app = new App({ name: "Nanikiru", version: "0.4.0" });
 
 app.ontoolresult = (result) => {
   const h = extract(result);
-  if (h) render(h);
+  if (h) { rendered = true; render(h); }
 };
 
 app.onhostcontextchanged = (ctx: McpUiHostContext) => {
@@ -89,4 +91,19 @@ app.onerror = console.error;
 app.connect().then(() => {
   const ctx = app.getHostContext();
   if (ctx?.theme) applyDocumentTheme(ctx.theme);
-});
+}).catch(() => {});
+
+// ホスト未接続（ファイル単体で開いた等）なら、サンプル手牌でデモ描画する。
+// 実際のホスト経由ではツール結果が先に届くのでデモは出ない。
+const DEMO: Hand = {
+  tiles: [2, 3, 4, 9, 10, 11, 15, 16, 17, 22, 32, 32, 33, 33],
+  names: ["3m", "4m", "5m", "1p", "2p", "3p", "7p", "8p", "9p", "5s", "發", "發", "中", "中"],
+  count: 14,
+  shanten: 0,
+  mode: "discard",
+  recommend: [{ index: 22, name: "5s", shanten: 0, ukeire: 4 }],
+  unknown: [],
+};
+setTimeout(() => {
+  if (!rendered) render(DEMO);
+}, 800);
