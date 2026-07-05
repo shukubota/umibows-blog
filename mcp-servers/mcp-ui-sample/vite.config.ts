@@ -9,7 +9,8 @@ export default defineConfig({
   plugins: [viteSingleFile()],
   build: {
     outDir: "../dist",
-    emptyOutDir: true,
+    // false: build:view 単体でも dist/index.js・server.js を消さない（誤消去防止）
+    emptyOutDir: false,
     rollupOptions: {
       input: resolve(import.meta.dirname, "view/hand.html"),
     },
