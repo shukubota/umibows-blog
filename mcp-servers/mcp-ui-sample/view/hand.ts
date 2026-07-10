@@ -88,13 +88,16 @@ app.onhostcontextchanged = (ctx: McpUiHostContext) => {
 
 app.onerror = console.error;
 
+let connected = false;
+
 app.connect().then(() => {
+  connected = true;
   const ctx = app.getHostContext();
   if (ctx?.theme) applyDocumentTheme(ctx.theme);
 }).catch(() => {});
 
-// ホスト未接続（ファイル単体で開いた等）なら、サンプル手牌でデモ描画する。
-// 実際のホスト経由ではツール結果が先に届くのでデモは出ない。
+// ホスト未接続（ファイル単体で開いた等）のときだけ、サンプル手牌でデモ描画する。
+// ホスト接続済みならツール結果が届くまでローディング表示（hand.html の初期表示）を維持する。
 const DEMO: Hand = {
   tiles: [2, 3, 4, 9, 10, 11, 15, 16, 17, 22, 32, 32, 33, 33],
   names: ["3m", "4m", "5m", "1p", "2p", "3p", "7p", "8p", "9p", "5s", "發", "發", "中", "中"],
@@ -105,5 +108,5 @@ const DEMO: Hand = {
   unknown: [],
 };
 setTimeout(() => {
-  if (!rendered) render(DEMO);
+  if (!rendered && !connected) render(DEMO);
 }, 800);
