@@ -1,9 +1,9 @@
 /**
- * mcp-ui-sample : 何切る MCP Apps サーバー（公式 ext-apps 準拠）
+ * mahjong-nanikiru : 何切る MCP Apps サーバー（公式 ext-apps 準拠）
  *
  * show_mahjong_hand ツールに手牌(牌コード配列)を渡すと、
  *   - シャンテン数・受け入れ・推奨打牌を計算し
- *   - ui://mcp-ui-sample/hand.html（牌SVGを描画するView）で表示する
+ *   - ui://mahjong-nanikiru/hand.html（牌SVGを描画するView）で表示する
  *
  * 牌コード: 1m..9m / 1p..9p / 1s..9s / 字牌 ton,nan,sha,pei(東南西北), haku,hatsu,chun(白發中)
  * 自然言語のあいまいな手牌表現は、呼び出すLLM側でこのコード配列に変換してから渡す。
@@ -113,8 +113,8 @@ function ukeire(c: number[]): { base: number; total: number; tiles: number[] } {
 }
 
 export function createServer(): McpServer {
-  const server = new McpServer({ name: "mcp-ui-sample", version: "0.4.0" });
-  const resourceUri = "ui://mcp-ui-sample/hand.html";
+  const server = new McpServer({ name: "mahjong-nanikiru", version: "0.4.0" });
+  const resourceUri = "ui://mahjong-nanikiru/hand.html";
 
   registerAppTool(
     server,
