@@ -1,5 +1,5 @@
 {
-  "name": "mcp-ui-sample",
+  "name": "mahjong-nanikiru",
   "version": "0.4.0",
   "private": true,
   "description": "ui:// で麻雀の手牌(何切る)を描画する MCP Apps サンプルサーバー（公式SDK準拠）",
