@@ -20,5 +20,5 @@ createRoot(document.getElementById("app")!).render(
     <Suspense fallback={<Loading />}>
       <App />
     </Suspense>
-  </StrictMode>,
+  </StrictMode>
 );

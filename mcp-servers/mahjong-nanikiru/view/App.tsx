@@ -25,10 +25,7 @@ function Tile({ index, shown }: { index: number; shown: boolean }) {
 function RecoTile({ reco, label }: { reco: Reco; label: string }) {
   return (
     <div className="reco">
-      <span
-        className="rt"
-        dangerouslySetInnerHTML={{ __html: TILE_SVGS[reco.index] ?? "" }}
-      />
+      <span className="rt" dangerouslySetInnerHTML={{ __html: TILE_SVGS[reco.index] ?? "" }} />
       <div className="u">{label}</div>
     </div>
   );
