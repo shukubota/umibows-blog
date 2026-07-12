@@ -1,0 +1,8 @@
+# ビルド成果物
+**/dist/
+
+# 生成物: 牌SVGデータ（FluffyStuff / riichi-mahjong-tiles, CC0）。手で整形しない
+mcp-servers/mahjong-nanikiru/view/tiles.ts
+
+# ローカル設定（gitignore 済み。CI のチェックアウトには存在しない）
+.claude/settings.local.json
