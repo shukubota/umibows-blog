@@ -70,6 +70,23 @@ app
   })
   .catch(() => {});
 
+/** ホストに接続済みか（単体プレビューかどうかの判定に使う）。 */
+export function isConnected(): boolean {
+  return connected;
+}
+
+/**
+ * show_mahjong_hand を「サーバーに」呼び直して、新しい手牌の解析結果を得る。
+ * View 発のインタラクション（1牌交換など）で使う。ホストがサーバーへプロキシする。
+ */
+export async function requestHand(tiles: string[]): Promise<Hand | null> {
+  const result = await app.callServerTool({
+    name: "show_mahjong_hand",
+    arguments: { tiles },
+  });
+  return extract(result);
+}
+
 // ホスト接続済みならツール結果が届くまで Suspense のローディングを維持する。
 // 未接続（単体表示）のときだけ、デモ手牌で解決してプレビューできるようにする。
 const DEMO: Hand = {
