@@ -9,9 +9,65 @@
  *   受信後のクライアント側の段階的な描画演出。
  */
 import { use, useEffect, useState } from "react";
-import { handPromise, subscribe } from "./mcp";
+import { handPromise, isConnected, requestHand, subscribe } from "./mcp";
 import type { Hand, Reco } from "./model";
 import { TILE_SVGS } from "./tiles";
+
+// index 0-33 の牌名（server.ts の NAMES と同順）。字牌は漢字（codeToIndex が受け付ける）。
+const ALL_NAMES = [
+  "1m",
+  "2m",
+  "3m",
+  "4m",
+  "5m",
+  "6m",
+  "7m",
+  "8m",
+  "9m",
+  "1p",
+  "2p",
+  "3p",
+  "4p",
+  "5p",
+  "6p",
+  "7p",
+  "8p",
+  "9p",
+  "1s",
+  "2s",
+  "3s",
+  "4s",
+  "5s",
+  "6s",
+  "7s",
+  "8s",
+  "9s",
+  "東",
+  "南",
+  "西",
+  "北",
+  "白",
+  "發",
+  "中",
+];
+
+/** 手牌からランダムに1枚捨て、山からランダムに1枚（同種4枚まで）ツモった牌名配列を返す。 */
+function randomSwap(names: string[]): { next: string[]; discarded: string; drawn: string } {
+  const next = names.slice();
+  const di = Math.floor(Math.random() * next.length);
+  const discarded = next[di];
+  next.splice(di, 1);
+  let drawn = "";
+  for (let guard = 0; guard < 200; guard++) {
+    const cand = ALL_NAMES[Math.floor(Math.random() * ALL_NAMES.length)];
+    if (next.filter((x) => x === cand).length < 4) {
+      drawn = cand;
+      break;
+    }
+  }
+  next.push(drawn);
+  return { next, discarded, drawn };
+}
 
 function Tile({ index, shown }: { index: number; shown: boolean }) {
   return (
@@ -106,7 +162,53 @@ function Invalid({ hand }: { hand: Hand }) {
 export function App() {
   const first = use(handPromise);
   const [hand, setHand] = useState<Hand>(first);
+  const [busy, setBusy] = useState(false);
+  const [swaps, setSwaps] = useState(0);
+  const [last, setLast] = useState<{ discarded: string; drawn: string } | null>(null);
   useEffect(() => subscribe(setHand), []);
 
-  return hand.mode === "invalid" ? <Invalid hand={hand} /> : <Result hand={hand} />;
+  async function swap() {
+    if (busy) return;
+    setBusy(true);
+    const { next, discarded, drawn } = randomSwap(hand.names);
+    setLast({ discarded, drawn });
+    try {
+      if (isConnected()) {
+        const h = await requestHand(next);
+        if (h) setHand(h);
+      }
+    } catch (e) {
+      console.error("swap failed", e);
+    } finally {
+      setSwaps((n) => n + 1);
+      setBusy(false);
+    }
+  }
+
+  function reset() {
+    setHand(first);
+    setSwaps(0);
+    setLast(null);
+  }
+
+  return (
+    <>
+      {hand.mode === "invalid" ? <Invalid hand={hand} /> : <Result hand={hand} />}
+      <div className="controls">
+        <button className="swap" onClick={swap} disabled={busy}>
+          {busy ? "計算中…" : "🎲 1牌交換"}
+        </button>
+        <button className="reset" onClick={reset} disabled={busy}>
+          リセット
+        </button>
+        {last && (
+          <span className="swaplog">
+            <span className="down">−{last.discarded}</span>
+            <span className="up">＋{last.drawn}</span>
+            <span className="cnt">（交換 {swaps} 回）</span>
+          </span>
+        )}
+      </div>
+    </>
+  );
 }
