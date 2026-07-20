@@ -1,214 +1,213 @@
 /**
- * 何切る View 本体（React）。
+ * 何切る View 本体（React）— ツモ／打牌インタラクション版。
  *
- * - use(handPromise) で最初の手牌を待つ（ローディングは hand.tsx の <Suspense> が担当）
- * - subscribe() でホストのツール再実行にも追従
- * - 段階描画: 手牌を左から1枚ずつ出し、出し切ってから推奨打牌をフェードインさせる
- *
- * ※ ツール結果は ontoolresult で「一括」到達するため、これは真の server stream ではなく
- *   受信後のクライアント側の段階的な描画演出。
+ * - use(handPromise) で最初の手牌（13枚）を待つ
+ * - subscribe() でホストのツール再実行にも追従（LLMが手牌を差し替えたら全リセット）
+ * - 「山からツモる」で山(wall)から1枚引いて14枚に → 捨てる牌をクリックして13枚に戻す
+ * - 山(wall)・河(discards) を View 側で管理し、打牌のたびに callServerTool で
+ *   サーバーにシャンテン/受け入れを再計算させる（requestHand）。
  */
 import { use, useEffect, useState } from "react";
 import { handPromise, isConnected, requestHand, subscribe } from "./mcp";
-import type { Hand, Reco } from "./model";
-import { TILE_SVGS } from "./tiles";
+import type { Hand } from "./model";
+import { TILE_NAMES, TILE_SVGS } from "./tiles";
 
-// index 0-33 の牌名（server.ts の NAMES と同順）。字牌は漢字（codeToIndex が受け付ける）。
-const ALL_NAMES = [
-  "1m",
-  "2m",
-  "3m",
-  "4m",
-  "5m",
-  "6m",
-  "7m",
-  "8m",
-  "9m",
-  "1p",
-  "2p",
-  "3p",
-  "4p",
-  "5p",
-  "6p",
-  "7p",
-  "8p",
-  "9p",
-  "1s",
-  "2s",
-  "3s",
-  "4s",
-  "5s",
-  "6s",
-  "7s",
-  "8s",
-  "9s",
-  "東",
-  "南",
-  "西",
-  "北",
-  "白",
-  "發",
-  "中",
-];
-
-/** 手牌からランダムに1枚捨て、山からランダムに1枚（同種4枚まで）ツモった牌名配列を返す。 */
-function randomSwap(names: string[]): { next: string[]; discarded: string; drawn: string } {
-  const next = names.slice();
-  const di = Math.floor(Math.random() * next.length);
-  const discarded = next[di];
-  next.splice(di, 1);
-  let drawn = "";
-  for (let guard = 0; guard < 200; guard++) {
-    const cand = ALL_NAMES[Math.floor(Math.random() * ALL_NAMES.length)];
-    if (next.filter((x) => x === cand).length < 4) {
-      drawn = cand;
-      break;
-    }
-  }
-  next.push(drawn);
-  return { next, discarded, drawn };
+/** 全牌（各4枚=136枚）から exclude を除いた山を作る。 */
+function buildWall(exclude: number[]): number[] {
+  const counts = new Array(34).fill(4);
+  for (const t of exclude) if (counts[t] > 0) counts[t]--;
+  const wall: number[] = [];
+  for (let t = 0; t < 34; t++) for (let k = 0; k < counts[t]; k++) wall.push(t);
+  return wall;
 }
+const sortIdx = (a: number[]) => a.slice().sort((x, y) => x - y);
 
-function Tile({ index, shown }: { index: number; shown: boolean }) {
+function Tile({
+  index,
+  className,
+  onClick,
+}: {
+  index: number;
+  className: string;
+  onClick?: () => void;
+}) {
   return (
     <span
-      className={`t${shown ? " show" : ""}`}
+      className={className}
+      onClick={onClick}
       dangerouslySetInnerHTML={{ __html: TILE_SVGS[index] ?? "" }}
     />
   );
 }
 
-function RecoTile({ reco, label }: { reco: Reco; label: string }) {
-  return (
-    <div className="reco">
-      <span className="rt" dangerouslySetInnerHTML={{ __html: TILE_SVGS[reco.index] ?? "" }} />
-      <div className="u">{label}</div>
-    </div>
-  );
-}
-
-function Result({ hand }: { hand: Hand }) {
-  // 手牌を左から順に見せ、出し切ってから推奨打牌を出す
-  const [revealed, setRevealed] = useState(0);
-  const [showReco, setShowReco] = useState(false);
-
-  useEffect(() => {
-    setRevealed(0);
-    setShowReco(false);
-    let i = 0;
-    const id = window.setInterval(() => {
-      i += 1;
-      setRevealed(i);
-      if (i >= hand.tiles.length) {
-        window.clearInterval(id);
-        window.setTimeout(() => setShowReco(true), 220);
-      }
-    }, 55);
-    return () => window.clearInterval(id);
-  }, [hand]);
-
-  const meta =
-    hand.mode === "complete"
-      ? "和了形です 🎉"
-      : hand.mode === "discard"
-        ? `シャンテン: ${hand.shanten}（何切る＝打牌候補）`
-        : `シャンテン: ${hand.shanten}`;
-
-  const recoLabel = hand.mode === "discard" ? "推奨打牌（受け入れ最大）" : "受け入れ牌";
-
-  return (
-    <>
-      <div className="label">手牌（{hand.count}枚）</div>
-      <div className="hand">
-        {hand.tiles.map((t, idx) => (
-          <Tile key={`${idx}-${t}`} index={t} shown={idx < revealed} />
-        ))}
-      </div>
-      <div className="meta">{meta}</div>
-      {hand.mode !== "complete" && (
-        <div className={`reco-wrap${showReco ? " show" : ""}`}>
-          <div className="label">{recoLabel}</div>
-          <div className="recos">
-            {hand.recommend.map((r) => (
-              <RecoTile
-                key={r.index}
-                reco={r}
-                label={hand.mode === "discard" ? `受 ${r.ukeire} 枚` : `${r.ukeire} 枚`}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-      {hand.unknown.length > 0 && (
-        <div className="warn">未認識のコード: {hand.unknown.join(", ")}</div>
-      )}
-    </>
-  );
-}
-
-function Invalid({ hand }: { hand: Hand }) {
-  return (
-    <>
-      <div className="warn">手牌が{hand.count}枚です。13枚か14枚で指定してください。</div>
-      <div className="hand">
-        {hand.tiles.map((t, idx) => (
-          <Tile key={`${idx}-${t}`} index={t} shown />
-        ))}
-      </div>
-    </>
-  );
+function splitFirst(h: Hand): { base: number[]; drawn: number | null } {
+  if (h.tiles.length >= 14) {
+    const b = h.tiles.slice();
+    const drawn = b.pop() as number;
+    return { base: sortIdx(b), drawn };
+  }
+  return { base: sortIdx(h.tiles), drawn: null };
 }
 
 export function App() {
   const first = use(handPromise);
-  const [hand, setHand] = useState<Hand>(first);
-  const [busy, setBusy] = useState(false);
-  const [swaps, setSwaps] = useState(0);
-  const [last, setLast] = useState<{ discarded: string; drawn: string } | null>(null);
-  useEffect(() => subscribe(setHand), []);
+  const init = splitFirst(first);
 
-  async function swap() {
-    if (busy) return;
-    setBusy(true);
-    const { next, discarded, drawn } = randomSwap(hand.names);
-    setLast({ discarded, drawn });
+  const [base, setBase] = useState<number[]>(init.base);
+  const [drawn, setDrawn] = useState<number | null>(init.drawn);
+  const [wall, setWall] = useState<number[]>(() => buildWall(first.tiles));
+  const [discards, setDiscards] = useState<number[]>([]);
+  const [analysis, setAnalysis] = useState<Hand>(first);
+  const [busy, setBusy] = useState(false);
+
+  const phase: "draw" | "discard" = drawn === null ? "draw" : "discard";
+
+  // ホストがツールを再実行（LLMが別の手牌を出した）ら、全状態をその手牌でリセット
+  useEffect(
+    () =>
+      subscribe((h) => {
+        const s = splitFirst(h);
+        setBase(s.base);
+        setDrawn(s.drawn);
+        setWall(buildWall(h.tiles));
+        setDiscards([]);
+        setAnalysis(h);
+      }),
+    []
+  );
+
+  async function analyze(tiles: number[]) {
+    if (!isConnected()) return;
     try {
-      if (isConnected()) {
-        const h = await requestHand(next);
-        if (h) setHand(h);
-      }
+      const h = await requestHand(tiles.map((i) => TILE_NAMES[i]));
+      if (h) setAnalysis(h);
     } catch (e) {
-      console.error("swap failed", e);
-    } finally {
-      setSwaps((n) => n + 1);
-      setBusy(false);
+      console.error("analyze failed", e);
     }
   }
 
-  function reset() {
-    setHand(first);
-    setSwaps(0);
-    setLast(null);
+  async function draw() {
+    if (busy || phase !== "draw" || wall.length === 0) return;
+    setBusy(true);
+    const i = Math.floor(Math.random() * wall.length);
+    const t = wall[i];
+    const nw = wall.slice();
+    nw.splice(i, 1);
+    setWall(nw);
+    setDrawn(t);
+    await analyze([...base, t]); // 14枚で何切る解析（推奨打牌が出る）
+    setBusy(false);
   }
+
+  async function discard(tile: number, fromDrawn: boolean) {
+    if (busy || phase !== "discard" || drawn === null) return;
+    setBusy(true);
+    let next: number[];
+    if (fromDrawn) {
+      next = base.slice(); // ツモ切り：手牌はそのまま
+    } else {
+      next = base.slice();
+      next.splice(next.indexOf(tile), 1); // 手牌から1枚外し
+      next.push(drawn); // ツモ牌が手に入る
+    }
+    next = sortIdx(next);
+    setBase(next);
+    setDiscards((d) => [...d, tile]);
+    setDrawn(null);
+    await analyze(next); // 13枚で受け入れ解析
+    setBusy(false);
+  }
+
+  function reset() {
+    setBase(init.base);
+    setDrawn(init.drawn);
+    setWall(buildWall(first.tiles));
+    setDiscards([]);
+    setAnalysis(first);
+  }
+
+  const sh = analysis.shanten;
+  const won = analysis.mode === "complete";
+  const meta = won
+    ? "🎉 和了形！（ツモ和了）"
+    : phase === "draw"
+      ? `シャンテン ${sh}　—　山からツモってください`
+      : `シャンテン ${sh}（14枚）　—　捨てる牌をクリック`;
+
+  const hintLabel = phase === "draw" ? "受け入れ牌（引くと進む）" : "推奨打牌（受け入れ最大）";
+  const showHints = !busy && !won && analysis.recommend.length > 0;
 
   return (
     <>
-      {hand.mode === "invalid" ? <Invalid hand={hand} /> : <Result hand={hand} />}
-      <div className="controls">
-        <button className="swap" onClick={swap} disabled={busy}>
-          {busy ? "計算中…" : "🎲 1牌交換"}
-        </button>
-        <button className="reset" onClick={reset} disabled={busy}>
-          リセット
-        </button>
-        {last && (
-          <span className="swaplog">
-            <span className="down">−{last.discarded}</span>
-            <span className="up">＋{last.drawn}</span>
-            <span className="cnt">（交換 {swaps} 回）</span>
-          </span>
+      <div className="label">手牌（{base.length + (drawn !== null ? 1 : 0)}枚）</div>
+      <div className={`hand${phase === "discard" ? " discardable" : ""}`}>
+        {base.map((t, i) => (
+          <Tile
+            key={`b${i}-${t}`}
+            index={t}
+            className={`t show${phase === "discard" ? " clickable" : ""}`}
+            onClick={phase === "discard" ? () => discard(t, false) : undefined}
+          />
+        ))}
+        {drawn !== null && <span className="gap" />}
+        {drawn !== null && (
+          <Tile
+            index={drawn}
+            className="t show drawn clickable"
+            onClick={() => discard(drawn, true)}
+          />
         )}
       </div>
+
+      <div className="meta">{meta}</div>
+
+      <div className="controls">
+        <button
+          className="draw"
+          disabled={busy || phase !== "draw" || wall.length === 0}
+          onClick={draw}
+        >
+          {wall.length === 0 ? "山なし（流局）" : busy && phase === "draw" ? "…" : "ツモ"}
+        </button>
+        <button className="reset" disabled={busy} onClick={reset}>
+          リセット
+        </button>
+        <span className="wallinfo">
+          山 残り <b>{wall.length}</b> 枚 ・ 河 {discards.length} 枚
+        </span>
+      </div>
+
+      {showHints && (
+        <div className="reco-wrap show">
+          <div className="label">{hintLabel}</div>
+          <div className="recos">
+            {analysis.recommend.map((r) => (
+              <div className="reco" key={r.index}>
+                <span
+                  className="rt"
+                  dangerouslySetInnerHTML={{ __html: TILE_SVGS[r.index] ?? "" }}
+                />
+                <div className="u">{phase === "draw" ? `${r.ukeire}枚` : `受 ${r.ukeire}`}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {discards.length > 0 && (
+        <>
+          <div className="label">河（捨て牌）</div>
+          <div className="river">
+            {discards.map((t, i) => (
+              <Tile key={`d${i}-${t}`} index={t} className="dt" />
+            ))}
+          </div>
+        </>
+      )}
+
+      {analysis.unknown.length > 0 && (
+        <div className="warn">未認識のコード: {analysis.unknown.join(", ")}</div>
+      )}
     </>
   );
 }

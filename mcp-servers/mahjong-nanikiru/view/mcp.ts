@@ -77,7 +77,7 @@ export function isConnected(): boolean {
 
 /**
  * show_mahjong_hand を「サーバーに」呼び直して、新しい手牌の解析結果を得る。
- * View 発のインタラクション（1牌交換など）で使う。ホストがサーバーへプロキシする。
+ * View 発のインタラクション（ツモ・打牌など）で使う。ホストがサーバーへプロキシする。
  */
 export async function requestHand(tiles: string[]): Promise<Hand | null> {
   const result = await app.callServerTool({
