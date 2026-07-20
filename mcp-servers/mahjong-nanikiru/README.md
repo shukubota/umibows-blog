@@ -71,6 +71,12 @@ npm run smoke
 
 Claude Desktop 本体は `claude_desktop_config.json` に絶対パスで同様に。事前に `npm run build` が必要。
 
+## remote MCP (Vercel) として公開する
+
+Claude cowork などから Streamable HTTP で使う remote MCP 版の設計・デプロイ手順は
+[`docs/mahjong-nanikiru/remote-mcp-deployment.md`](../../docs/mahjong-nanikiru/remote-mcp-deployment.md) を参照。
+エンドポイントは `https://<host>/api/mcp/mahjong-nanikiru/mcp`（Next.js の route handler + `mcp-handler`）。
+
 ## クレジット / 注意
 
 - 牌画像: FluffyStuff / riichi-mahjong-tiles (CC0)。
