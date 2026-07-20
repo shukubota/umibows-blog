@@ -1,6 +1,9 @@
 # ビルド成果物
 **/dist/
 
+# 生成物: 何切る View の単一HTML（vite build 出力 dist/hand.html の追跡コピー。手で整形しない）
+app/api/mcp/mahjong-nanikiru/hand.html
+
 # 生成物: 牌SVGデータ（FluffyStuff / riichi-mahjong-tiles, CC0）。手で整形しない
 mcp-servers/mahjong-nanikiru/view/tiles.ts
 
