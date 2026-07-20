@@ -32,10 +32,13 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api/auth (authentication endpoint)
+     * - api/mcp (remote MCP endpoints: 独自の共有トークン認証で保護するため
+     *            Basic認証の rewrite 対象から外す。MCP クライアントは Basic認証を
+     *            送れず、rewrite 先の /api/auth は POST 非対応で 405 になるため)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api/auth|api/mcp|_next/static|_next/image|favicon.ico).*)",
   ],
 };
