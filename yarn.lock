@@ -1192,10 +1192,10 @@
     tslib "^2.3.0"
     whatwg-fetch "^3.0.0"
 
-"@modelcontextprotocol/ext-apps@^1.7.4":
-  version "1.7.4"
-  resolved "https://registry.yarnpkg.com/@modelcontextprotocol/ext-apps/-/ext-apps-1.7.4.tgz#8b97005a134a6da90ce088bfda2097464bed9b46"
-  integrity sha512-QQqysE549cf/Y0VabBmAACXhj92EhB3t8yVct2BHbkWiPTFA1S91EqTVjYXXcZEefXU0pmHcdObhsNMcomJIOQ==
+"@modelcontextprotocol/ext-apps@^1.7.5":
+  version "1.7.5"
+  resolved "https://registry.yarnpkg.com/@modelcontextprotocol/ext-apps/-/ext-apps-1.7.5.tgz#53004fadf7bef79c533e28b10893199c7bf46693"
+  integrity sha512-TjPH2S2y5UEGKhmI6+XGFuqfqOV4ppe1x6DA3txnUaEWkgtA4G5vo14jGKFZmegdkZ1H4QMLyujLvoU1BEdnAg==
   dependencies:
     "@standard-schema/spec" "^1.1.0"
 
