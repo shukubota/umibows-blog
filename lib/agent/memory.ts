@@ -77,8 +77,7 @@ export const memory = {
     const db = await getDb();
     if (!db) return memSessions.get(sessionId) ?? null;
     const row = db.prepare("SELECT state_json FROM sessions WHERE id = ?").get(sessionId) as
-      | { state_json: string }
-      | undefined;
+      { state_json: string } | undefined;
     if (!row) return null;
     return JSON.parse(row.state_json) as SessionState;
   },
