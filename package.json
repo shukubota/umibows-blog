@@ -37,7 +37,7 @@
     "lucide-react": "^1.14.0",
     "mcp-handler": "^1.1.0",
     "next": "14.2.3",
-    "onnxruntime-node": "^1.25.1",
+    "onnxruntime-node": "^1.27.0",
     "pino": "^10.3.1",
     "react": "^18",
     "react-dom": "^18",
