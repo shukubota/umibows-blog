@@ -98,14 +98,14 @@ const handler = createMcpHandler(
 // ─── 認証設定 ────────────────────────────────────────────────────────────────
 
 /**
- * withMcpAuth に渡す resourceUrl はオリジンとして使われる。
- * 実際の metadata URL: `${RESOURCE_ORIGIN}${RESOURCE_METADATA_PATH}`
- *   = https://www.umibows.com/.well-known/oauth-protected-resource/api/mcp/mahjong-nanikiru/mcp
+ * withMcpAuth の resourceUrl = 401 レスポンスの WWW-Authenticate に載せる metadata URL のオリジン。
+ *   設定時: `${MCP_RESOURCE_ORIGIN}${RESOURCE_METADATA_PATH}`
+ *   未設定: withMcpAuth が X-Forwarded-Host / req.url から自動検出（preview URL でも正しく動く）
  *
- * ローカル開発: .env.local に MCP_RESOURCE_ORIGIN=http://localhost:3000 を設定することで
- * mcp-remote がローカルサーバーを resource として認識できるようになる。
+ * 設定が必要なケース:
+ *   - ローカル開発: MCP_RESOURCE_ORIGIN=http://localhost:3000（HTTP のためヘッダ検出が不安定）
+ *   - Vercel プロキシ配下で X-Forwarded-Host が信頼できない場合
  */
-const RESOURCE_ORIGIN = process.env.MCP_RESOURCE_ORIGIN ?? "https://www.umibows.com";
 const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource/api/mcp/mahjong-nanikiru/mcp";
 
 /** カンマ区切りで Desktop 用・cowork 用の両 client_id を列挙する */
@@ -198,8 +198,10 @@ async function verifyToken(req: Request, bearerToken?: string): Promise<AuthInfo
 const authed = withMcpAuth(handler, verifyToken, {
   required: true,
   resourceMetadataPath: RESOURCE_METADATA_PATH,
-  // ⚠ withMcpAuth の resourceUrl = オリジン（フル URL を渡すとパスが二重になる）
-  resourceUrl: RESOURCE_ORIGIN,
+  // MCP_RESOURCE_ORIGIN が設定されている場合のみ明示指定。
+  // 未設定時は withMcpAuth が X-Forwarded-Host から自動検出するため
+  // preview URL / 本番 URL どちらでも正しい metadata URL が生成される。
+  ...(process.env.MCP_RESOURCE_ORIGIN ? { resourceUrl: process.env.MCP_RESOURCE_ORIGIN } : {}),
 });
 
 export { authed as GET, authed as POST, authed as DELETE };
