@@ -12,8 +12,8 @@
  *   - トークン検証: oauth2.googleapis.com/tokeninfo（結果は TTL キャッシュ）
  *   - 許可判定: aud ∈ GOOGLE_OAUTH_CLIENT_IDS かつ email ∈ MCP_ALLOWED_EMAILS
  *
- * 移行期間: MAHJONG_MCP_TOKEN が設定されている間は ?key= / Bearer <shared-token> も許容。
- *   全クライアント移行後に同変数と対応コードを削除する（docs/mahjong-nanikiru/remote-mcp-google-oauth.md §10）。
+ * 移行期間: 共有トークン環境変数が設定されている間は ?key= クエリパラメータも許容。
+ *   全クライアントの OAuth 移行後に共有トークン対応コードを削除する（§10）。
  *
  * シャンテン/受け入れ計算は mcp-servers/mahjong-nanikiru/nanikiru-core.ts と共有（単一ソース）。
  * SSE は使わないので Redis 不要（disableSse: true）。
