@@ -32,13 +32,16 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api/auth (authentication endpoint)
-     * - api/mcp (remote MCP endpoints: 独自の共有トークン認証で保護するため
+     * - api/mcp (remote MCP endpoints: Google OAuth / 共有トークンで保護するため
      *            Basic認証の rewrite 対象から外す。MCP クライアントは Basic認証を
      *            送れず、rewrite 先の /api/auth は POST 非対応で 405 になるため)
+     * - .well-known (RFC 9728 Protected Resource Metadata: MCP クライアントが
+     *               認可サーバーを discovery するために参照するエンドポイント。
+     *               Basic認証で弾くと MCP の OAuth フローが開始できなくなるため)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    "/((?!api/auth|api/mcp|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api/auth|api/mcp|\\.well-known|_next/static|_next/image|favicon.ico).*)",
   ],
 };
