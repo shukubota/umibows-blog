@@ -18,6 +18,17 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const res = await fetch("https://accounts.google.com/.well-known/openid-configuration");
+
+  if (!res.ok) {
+    return new Response(
+      JSON.stringify({ error: "Failed to fetch OIDC configuration from Google" }),
+      {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
   const data = await res.json();
 
   return Response.json(data, {

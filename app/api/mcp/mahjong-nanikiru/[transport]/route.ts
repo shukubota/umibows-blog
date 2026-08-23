@@ -144,7 +144,8 @@ async function verifyToken(req: Request, bearerToken?: string): Promise<AuthInfo
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  // Google OAuth 未設定（ローカル開発）は素通し
+  // Google OAuth 未設定の場合は認証不可（required: true のため 401 になる）
+  // ローカル開発時は .env.local に GOOGLE_OAUTH_CLIENT_IDS / MCP_ALLOWED_EMAILS を設定すること
   if (ALLOWED_CLIENT_IDS.length === 0 || ALLOWED_EMAILS.length === 0) return undefined;
   if (!bearerToken) return undefined;
 
@@ -180,7 +181,11 @@ async function verifyToken(req: Request, bearerToken?: string): Promise<AuthInfo
     scopes: String(info.scope ?? "")
       .split(" ")
       .filter(Boolean),
-    expiresAt: info.exp ? Number(info.exp) : undefined, // 秒 epoch。withMcpAuth が失効判定する
+    expiresAt: info.exp
+      ? Number.isFinite(Number(info.exp))
+        ? Number(info.exp)
+        : undefined
+      : undefined, // 秒 epoch。withMcpAuth が失効判定する
     extra: { sub: info.sub, email: info.email },
   };
 

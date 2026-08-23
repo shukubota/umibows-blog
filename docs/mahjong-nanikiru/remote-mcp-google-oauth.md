@@ -9,7 +9,8 @@ remote MCP エンドポイント (`/api/mcp/mahjong-nanikiru/mcp`) の認証を�
 - MCP サーバーの役割: **Resource Server のみ**（AS は実装しない）
 - 前提実装: `docs/mahjong-nanikiru/remote-mcp-deployment.md`
 
-> ステータス: **設計段階**。未実装。§9 の検証順序に沿って 1 項目だけ実測が必要。
+> ステータス: **実装済み**（§7.3 ワークアラウンド含む）。
+> PRM を意図的に 404 にして `/.well-known/openid-configuration` 経由で discovery させる方式で mcp-remote での動作を確認済み。
 
 ---
 
@@ -309,7 +310,8 @@ async function verifyGoogleToken(
 ```
 
 **キャッシュ**: tokeninfo をリクエスト毎に叩くと 1 往復増えるうえ Google 側のレート制限に触る。
-アクセストークンの SHA-256 をキーに、TTL = `min(exp - now, 300s)` の in-memory LRU を置く。
+アクセストークン文字列をキーに、TTL = `min(exp - now, 300s)` の in-memory キャッシュを置く。
+上限 500 件で超過時は最古エントリを削除（`lib/mcp/google-token-cache.ts` 参照）。
 Vercel Fluid Compute は関数インスタンスを再利用するので実効性がある
 （インスタンス間では共有されない = 許容）。
 
@@ -334,11 +336,11 @@ Vercel Fluid Compute は関数インスタンスを再利用するので実効�
 
 ### 環境変数
 
-| 変数                     | 用途                                           |
-| ------------------------ | ---------------------------------------------- |
-| `GOOGLE_OAUTH_CLIENT_ID` | tokeninfo の `aud` 突き合わせ用（**必須**）    |
-| `MCP_ALLOWED_EMAILS`     | カンマ区切りの許可メール allowlist（**必須**） |
-| `MAHJONG_MCP_TOKEN`      | 既存の共有トークン。移行完了後に削除（§10）    |
+| 変数                      | 用途                                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| `GOOGLE_OAUTH_CLIENT_IDS` | tokeninfo の `aud` 突き合わせ用。Desktop 用・cowork 用をカンマ区切りで列挙（**必須**） |
+| `MCP_ALLOWED_EMAILS`      | カンマ区切りの許可メール allowlist（**必須**）                                         |
+| `MAHJONG_MCP_TOKEN`       | 既存の共有トークン。移行完了後に削除（§10）                                            |
 
 `GOOGLE_OAUTH_CLIENT_SECRET` は **サーバー側では不要**。クライアント（mcp-remote /
 cowork）が保持する。
@@ -517,23 +519,25 @@ matcher: [
 ],
 ```
 
-### 7.3 RFC 8707 `resource` パラメータ（**唯一の未検証項目**）
+### 7.3 RFC 8707 `resource` パラメータ（**確認済み NG → ワークアラウンド適用済み**）
 
 `@modelcontextprotocol/sdk` は authorize / token 両方のリクエストに `resource=` を付与する
 （`client/auth.js` の `authorizationUrl.searchParams.set('resource', …)` /
-`tokenRequestParams.set('resource', …)` で確認）。Google は RFC 8707 非対応。
+`tokenRequestParams.set('resource', …)` で確認）。
 
-未知パラメータは通常無視されるはずだが、**ここだけは実測しないと分からない**。
+**mcp-remote で実測した結果、Google の token エンドポイントが `resource` パラメータ付きのリクエストに `400 Bad Request` を返すことを確認**（`InvalidGrantError: Bad Request`）。
 
-> ⚠ **クライアント実装ごとに別途検証が必要。**
-> このリスクは **mcp-remote 固有**である。mcp-remote は
-> `@modelcontextprotocol/sdk` の OAuth 実装を使うので確実に `resource` を送るが、
-> **cowork は claude.ai バックエンドの独自実装**（§6.5 ①）なので、送るかどうかは不明。
-> §6.5 の観測でも `part=` に符号化されていて確認できなかった。
-> 片方が通っても他方の保証にはならない。
+**ワークアラウンド（実装済み）**: PRM エンドポイントを意図的に 404 にし、代わりに
+`/.well-known/openid-configuration` で Google の OIDC メタデータをプロキシする。
+この経路では SDK の `selectResourceURL` が `resourceMetadata=undefined` を受け取り
+`resource` パラメータを送らなくなる。
 
-NG だったクライアントについては §8 のブローカー案に切り替える
-（あるいは、そのクライアントだけ諦める）。
+> ⚠ **cowork (claude.ai) はバックエンド独自実装のため別途検証が必要。**
+> mcp-remote でのワークアラウンドが cowork でも有効かどうかは未確認。
+> cowork の実装が `resource` を送るかどうかは §6.5 の観測では確認できなかった。
+
+§8 のブローカー案への切り替えは、ツールが増えてスコープ分離が必要になった時点か、
+cowork でも NG が確認された時点で検討する。
 
 なお `withMcpAuth` は `authInfo.resource` の突き合わせを行わないので、
 サーバー側で `resource` を埋める必要はない（❸ では省略している）。
