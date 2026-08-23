@@ -6,6 +6,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // matcher の正規表現では Vercel Edge ランタイムでのエスケープ解釈の差異により
+  // /.well-known/* が除外されないケースがあるため、関数本体で明示的に除外する
+  const pathname = request.nextUrl.pathname;
+  if (pathname.startsWith("/.well-known/") || pathname.startsWith("/api/mcp/")) {
+    return NextResponse.next();
+  }
+
   const basicAuth = request.headers.get("authorization");
   const url = request.nextUrl;
 
