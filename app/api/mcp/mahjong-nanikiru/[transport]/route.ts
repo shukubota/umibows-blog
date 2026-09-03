@@ -5,18 +5,26 @@
  * mcp-handler(Vercel 公式アダプタ) で McpServer を Next.js の route handler に載せている。
  *
  * エンドポイント: https://<host>/api/mcp/mahjong-nanikiru/mcp
- * 認証: 環境変数 MAHJONG_MCP_TOKEN を設定すると ?key=<token> もしくは
- *       Authorization: Bearer <token> が必須になる（未設定なら素通し=ローカル用）。
+ *
+ * 認証: Google OpenID Connect (OAuth 2.1) による Bearer トークン検証。
+ *   - MCP サーバーは Resource Server のみ実装（AS は accounts.google.com）
+ *   - RFC 9728 Protected Resource Metadata: /.well-known/oauth-protected-resource/...
+ *   - トークン検証: oauth2.googleapis.com/tokeninfo（結果は TTL キャッシュ）
+ *   - 許可判定: aud ∈ GOOGLE_OAUTH_CLIENT_IDS かつ email ∈ MCP_ALLOWED_EMAILS
+ *
+ * 移行期間: 共有トークン環境変数が設定されている間は ?key= クエリパラメータも許容。
+ *   全クライアントの OAuth 移行後に共有トークン対応コードを削除する（§10）。
  *
  * シャンテン/受け入れ計算は mcp-servers/mahjong-nanikiru/nanikiru-core.ts と共有（単一ソース）。
  * SSE は使わないので Redis 不要（disableSse: true）。
  */
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import {
   registerAppResource,
   registerAppTool,
   RESOURCE_MIME_TYPE,
 } from "@modelcontextprotocol/ext-apps/server";
-import { createMcpHandler } from "mcp-handler";
+import { createMcpHandler, withMcpAuth } from "mcp-handler";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
@@ -27,6 +35,7 @@ import {
   TOOL_NAME,
   TOOL_TITLE,
 } from "@/mcp-servers/mahjong-nanikiru/nanikiru-core";
+import { getCachedToken, setCachedToken } from "@/lib/mcp/google-token-cache";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -86,27 +95,113 @@ const handler = createMcpHandler(
   }
 );
 
-// --- 共有トークン認証 ---
-// cowork の remote connector は URL しか渡せないので ?key= を主に使う想定。
-// ヘッダを送れるクライアント向けに Authorization: Bearer も許容する。
-function authorized(req: Request): boolean {
-  const token = process.env.MAHJONG_MCP_TOKEN;
-  if (!token) return true; // 未設定時は素通し（ローカル開発）
-  const provided =
-    new URL(req.url).searchParams.get("key") ??
-    req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
-    null;
-  return provided === token;
-}
+// ─── 認証設定 ────────────────────────────────────────────────────────────────
 
-async function guarded(req: Request): Promise<Response> {
-  if (!authorized(req)) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401,
-      headers: { "content-type": "application/json" },
-    });
+/**
+ * withMcpAuth の resourceUrl = 401 レスポンスの WWW-Authenticate に載せる metadata URL のオリジン。
+ *   設定時: `${MCP_RESOURCE_ORIGIN}${RESOURCE_METADATA_PATH}`
+ *   未設定: withMcpAuth が X-Forwarded-Host / req.url から自動検出（preview URL でも正しく動く）
+ *
+ * 設定が必要なケース:
+ *   - ローカル開発: MCP_RESOURCE_ORIGIN=http://localhost:3000（HTTP のためヘッダ検出が不安定）
+ *   - Vercel プロキシ配下で X-Forwarded-Host が信頼できない場合
+ */
+const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource/api/mcp/mahjong-nanikiru/mcp";
+
+/** カンマ区切りで Desktop 用・cowork 用の両 client_id を列挙する */
+const ALLOWED_CLIENT_IDS = (process.env.GOOGLE_OAUTH_CLIENT_IDS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const ALLOWED_EMAILS = (process.env.MCP_ALLOWED_EMAILS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+// ─── トークン検証 ─────────────────────────────────────────────────────────────
+
+/**
+ * Google tokeninfo を使ってアクセストークンを検証する。
+ *
+ * 移行期間: MAHJONG_MCP_TOKEN が設定されている場合は
+ *   ?key= クエリパラメータもしくは shared-token による Bearer も許容する。
+ *   全クライアントの Google OAuth 移行後に以下の「移行パス」ブロックごと削除する。
+ */
+async function verifyToken(req: Request, bearerToken?: string): Promise<AuthInfo | undefined> {
+  // ── 移行パス: 共有トークン (?key= or Bearer) ──────────────────────────────
+  const sharedToken = process.env.MAHJONG_MCP_TOKEN;
+  if (sharedToken) {
+    const keyParam = new URL(req.url).searchParams.get("key");
+    const provided = keyParam ?? bearerToken;
+    if (provided === sharedToken) {
+      return {
+        token: provided,
+        clientId: "shared-token",
+        scopes: [],
+      };
+    }
   }
-  return handler(req);
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Google OAuth 未設定の場合は認証不可（required: true のため 401 になる）
+  // ローカル開発時は .env.local に GOOGLE_OAUTH_CLIENT_IDS / MCP_ALLOWED_EMAILS を設定すること
+  if (ALLOWED_CLIENT_IDS.length === 0 || ALLOWED_EMAILS.length === 0) return undefined;
+  if (!bearerToken) return undefined;
+
+  // キャッシュヒット
+  const cached = getCachedToken(bearerToken);
+  if (cached) return cached;
+
+  // tokeninfo でトークンを introspect
+  // ⚠ Google のアクセストークンは opaque 文字列なので JWKS ローカル検証は不可。
+  //   tokeninfo の aud = このトークンを発行した OAuth client_id（リソース URL ではない）。
+  const res = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(bearerToken)}`
+  );
+  if (!res.ok) return undefined;
+
+  const info = (await res.json()) as {
+    aud?: string;
+    sub?: string;
+    email?: string;
+    email_verified?: string | boolean;
+    exp?: string;
+    scope?: string;
+  };
+
+  // confused deputy 対策: 別の Google OAuth アプリのトークンを拒否
+  if (!info.aud || !ALLOWED_CLIENT_IDS.includes(info.aud)) return undefined;
+  if (info.email_verified !== "true" && info.email_verified !== true) return undefined;
+  if (!info.email || !ALLOWED_EMAILS.includes(info.email)) return undefined;
+
+  const authInfo: AuthInfo = {
+    token: bearerToken,
+    clientId: info.aud,
+    scopes: String(info.scope ?? "")
+      .split(" ")
+      .filter(Boolean),
+    expiresAt: info.exp
+      ? Number.isFinite(Number(info.exp))
+        ? Number(info.exp)
+        : undefined
+      : undefined, // 秒 epoch。withMcpAuth が失効判定する
+    extra: { sub: info.sub, email: info.email },
+  };
+
+  setCachedToken(bearerToken, authInfo);
+  return authInfo;
 }
 
-export { guarded as GET, guarded as POST, guarded as DELETE };
+// ─── ルートエクスポート ────────────────────────────────────────────────────────
+
+const authed = withMcpAuth(handler, verifyToken, {
+  required: true,
+  resourceMetadataPath: RESOURCE_METADATA_PATH,
+  // MCP_RESOURCE_ORIGIN が設定されている場合のみ明示指定。
+  // 未設定時は withMcpAuth が X-Forwarded-Host から自動検出するため
+  // preview URL / 本番 URL どちらでも正しい metadata URL が生成される。
+  ...(process.env.MCP_RESOURCE_ORIGIN ? { resourceUrl: process.env.MCP_RESOURCE_ORIGIN } : {}),
+});
+
+export { authed as GET, authed as POST, authed as DELETE };
