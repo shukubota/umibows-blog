@@ -21,6 +21,7 @@ export default function Home() {
     { id: "stock-dashboard", title: "米国株分析ダッシュボード", path: "/stock-dashboard" },
     { id: "liff", title: "LIFF Dev Playground", path: "/liff" },
     { id: "ai-agent", title: "AI Agent (self-built · MCP · Skill)", path: "/ai-agent" },
+    { id: "rss-viewer", title: "RSS Viewer", path: "/rss-viewer" },
   ];
 
   return (
