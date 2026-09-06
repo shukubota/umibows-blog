@@ -31,6 +31,7 @@
     "@mui/material": "^9.3.1",
     "@vercel/oidc": "^3.8.5",
     "better-sqlite3": "^12.11.1",
+    "fast-xml-parser": "^5.11.1",
     "framer-motion": "^12.38.0",
     "google-auth-library": "^10.6.2",
     "katex": "^0.18.1",
