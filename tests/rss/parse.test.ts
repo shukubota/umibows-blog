@@ -5,7 +5,7 @@ const BASE = "https://example.com/feed.xml";
 
 function rss(items: string, channelExtra = ""): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>Example Blog</title>
     <link>https://example.com</link>
@@ -137,6 +137,151 @@ describe("parseFeed / RSS 2.0", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.feed.items[0].link).toBeUndefined();
+  });
+});
+
+describe("parseFeed / サムネイル画像", () => {
+  const IMG = "https://img.example.com/a.jpg";
+
+  it("media:thumbnail を最優先で使う", () => {
+    const result = parseFeed(
+      rss(`<item><title>t</title>
+        <media:thumbnail url="${IMG}"/>
+        <media:content url="https://img.example.com/other.jpg" medium="image"/>
+        <enclosure url="https://img.example.com/enc.jpg" type="image/jpeg" length="1"/>
+      </item>`),
+      BASE
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.feed.items[0].imageUrl).toBe(IMG);
+  });
+
+  it("media:content は画像のときだけ使う", () => {
+    const result = parseFeed(
+      rss(`<item><title>t</title>
+        <media:content url="https://img.example.com/movie.mp4" medium="video"/>
+        <media:content url="${IMG}" type="image/jpeg"/>
+      </item>`),
+      BASE
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.feed.items[0].imageUrl).toBe(IMG);
+  });
+
+  it("enclosure は画像のときだけ使う（音声のポッドキャストは無視）", () => {
+    const audio = parseFeed(
+      rss(
+        `<item><title>t</title><enclosure url="https://a.example.com/ep.mp3" type="audio/mpeg" length="1"/></item>`
+      ),
+      BASE
+    );
+    const image = parseFeed(
+      rss(`<item><title>t</title><enclosure url="${IMG}" type="image/jpeg" length="1"/></item>`),
+      BASE
+    );
+
+    expect(audio.ok).toBe(true);
+    expect(image.ok).toBe(true);
+    if (!audio.ok || !image.ok) return;
+    expect(audio.feed.items[0].imageUrl).toBeUndefined();
+    expect(image.feed.items[0].imageUrl).toBe(IMG);
+  });
+
+  it("media / enclosure が無ければ description の最初の img を使う", () => {
+    const result = parseFeed(
+      rss(`<item><title>t</title>
+        <description><![CDATA[<p>本文</p><img src="${IMG}"><img src="https://img.example.com/second.jpg">]]></description>
+      </item>`),
+      BASE
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.feed.items[0].imageUrl).toBe(IMG);
+    expect(result.feed.items[0].summary).toBe("本文");
+  });
+
+  it("img の src に含まれる実体参照を戻す", () => {
+    const result = parseFeed(
+      rss(`<item><title>t</title>
+        <description>&lt;img src="https://img.example.com/get.action?a=1&amp;amp;b=2"&gt;</description>
+      </item>`),
+      BASE
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.feed.items[0].imageUrl).toBe("https://img.example.com/get.action?a=1&b=2");
+  });
+
+  it("相対パスの画像は取得元 URL を基準に絶対化し、http(s) 以外は破棄する", () => {
+    const relative = parseFeed(
+      rss(`<item><title>t</title><media:thumbnail url="/img/thumb.png"/></item>`),
+      BASE
+    );
+    const dataUri = parseFeed(
+      rss(`<item><title>t</title><media:thumbnail url="data:image/png;base64,AAAA"/></item>`),
+      BASE
+    );
+
+    expect(relative.ok).toBe(true);
+    expect(dataUri.ok).toBe(true);
+    if (!relative.ok || !dataUri.ok) return;
+    expect(relative.feed.items[0].imageUrl).toBe("https://example.com/img/thumb.png");
+    expect(dataUri.feed.items[0].imageUrl).toBeUndefined();
+  });
+
+  it("画像フィードの description（img + パスの繰り返し）は概要にしない", () => {
+    // 遊戯王カードDB の画像フィードと同じ形。タグを除去すると URL の断片だけが残る
+    const path = "/yugiohdb/get_image.action?type=1&amp;cid=14074";
+    const result = parseFeed(
+      rss(`<item><title>アヴァロンの魔女モルガン</title>
+        <description><![CDATA[<img src="https://db.example.com${path}">${path.repeat(3)}]]></description>
+        <media:thumbnail url="https://db.example.com/thumb.jpg"/>
+      </item>`),
+      BASE
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.feed.items[0].summary).toBeUndefined();
+    expect(result.feed.items[0].imageUrl).toBe("https://db.example.com/thumb.jpg");
+  });
+
+  it("Atom は media:thumbnail と link[rel=enclosure] から拾う", () => {
+    const xml = `<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+      <title>A</title>
+      <entry><title>E1</title><media:thumbnail url="${IMG}"/></entry>
+      <entry><title>E2</title>
+        <link rel="alternate" href="https://atom.example.com/2"/>
+        <link rel="enclosure" type="image/png" href="https://img.example.com/e2.png"/>
+      </entry>
+      <entry><title>E3</title><content type="html">&lt;img src="https://img.example.com/e3.gif"&gt;</content></entry>
+    </feed>`;
+    const result = parseFeed(xml, BASE);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.feed.items.map((i) => i.imageUrl)).toEqual([
+      IMG,
+      "https://img.example.com/e2.png",
+      "https://img.example.com/e3.gif",
+    ]);
+  });
+
+  it("画像が無ければ undefined", () => {
+    const result = parseFeed(
+      rss(`<item><title>t</title><description>ふつうの本文</description></item>`),
+      BASE
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.feed.items[0].imageUrl).toBeUndefined();
   });
 });
 

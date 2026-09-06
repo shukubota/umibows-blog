@@ -91,9 +91,9 @@ XML (RSS 2.0 / Atom) のフィード URL を入力欄に貼り付けると、そ
 │ https://example.com                            │
 ├────────────────────────────────────────────────┤
 │ ┌────────────────────────────────────────────┐ │
-│ │ 記事タイトル (リンク)                      │ │
-│ │ 2026-09-01 · author                        │ │
-│ │ 概要テキスト（3 行でクランプ）…             │ │
+│ │ ┌──────┐ 記事タイトル (リンク)             │ │
+│ │ │ 画像 │ 2026-09-01 · author               │ │
+│ │ └──────┘ 概要テキスト（3 行でクランプ）…    │ │
 │ └────────────────────────────────────────────┘ │
 │ ┌────────────────────────────────────────────┐ │
 │ │ …                                          │ │
@@ -129,6 +129,7 @@ export interface FeedItem {
   publishedAt?: string; // ISO 8601 に正規化。パース不能なら undefined
   author?: string;
   summary?: string; // タグを除去したプレーンテキスト（最大 400 文字）
+  imageUrl?: string; // サムネイル画像の絶対 URL
 }
 
 export interface Feed {
@@ -182,7 +183,8 @@ GET のクエリ文字列だとフィード URL のエスケープが煩雑に�
         "link": "https://example.com/posts/1",
         "publishedAt": "2026-09-01T00:00:00.000Z",
         "author": "umibows",
-        "summary": "..."
+        "summary": "...",
+        "imageUrl": "https://example.com/posts/1/thumb.jpg"
       }
     ]
   }
@@ -228,16 +230,17 @@ GET のクエリ文字列だとフィード URL のエスケープが煩雑に�
 
 ### フィールドマッピング
 
-| `Feed`/`FeedItem` | RSS 2.0 / RDF                          | Atom                                             |
-| ----------------- | -------------------------------------- | ------------------------------------------------ |
-| `title`           | `channel/title`, `item/title`          | `feed/title`, `entry/title`                      |
-| `siteUrl`         | `channel/link`                         | `feed/link[rel=alternate]@href`                  |
-| `description`     | `channel/description`                  | `feed/subtitle`                                  |
-| `link`            | `item/link`                            | `entry/link[rel=alternate]@href`（無ければ先頭） |
-| `publishedAt`     | `item/pubDate` → `dc:date`             | `entry/published` → `entry/updated`              |
-| `author`          | `item/author` → `dc:creator`           | `entry/author/name`                              |
-| `summary`         | `item/description` → `content:encoded` | `entry/summary` → `entry/content`                |
-| `id`              | `item/guid` → `link`                   | `entry/id` → `link`                              |
+| `Feed`/`FeedItem` | RSS 2.0 / RDF                                                                                                                            | Atom                                                                                  |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `title`           | `channel/title`, `item/title`                                                                                                            | `feed/title`, `entry/title`                                                           |
+| `siteUrl`         | `channel/link`                                                                                                                           | `feed/link[rel=alternate]@href`                                                       |
+| `description`     | `channel/description`                                                                                                                    | `feed/subtitle`                                                                       |
+| `link`            | `item/link`                                                                                                                              | `entry/link[rel=alternate]@href`（無ければ先頭）                                      |
+| `publishedAt`     | `item/pubDate` → `dc:date`                                                                                                               | `entry/published` → `entry/updated`                                                   |
+| `author`          | `item/author` → `dc:creator`                                                                                                             | `entry/author/name`                                                                   |
+| `summary`         | `item/description` → `content:encoded`                                                                                                   | `entry/summary` → `entry/content`                                                     |
+| `id`              | `item/guid` → `link`                                                                                                                     | `entry/id` → `link`                                                                   |
+| `imageUrl`        | `media:thumbnail@url` → `media:content[medium=image\|type^=image/]@url` → `enclosure[type^=image/]@url` → 本文 HTML の最初の `<img src>` | 同左（`enclosure` は `entry/link[rel=enclosure]@href`、本文は `content` → `summary`） |
 
 ### 正規化ルール
 
@@ -245,7 +248,12 @@ GET のクエリ文字列だとフィード URL のエスケープが煩雑に�
 - `summary` は **HTML タグを除去**してプレーンテキスト化し、空白を畳んで 400 文字で切る
   （HTML をそのまま描画しない = サニタイズ実装を持たずに XSS を回避する）
 - `publishedAt` は `Date` でパースして ISO 8601 に統一。失敗したら `undefined`
-- `link` は取得元 URL を base にした絶対 URL へ解決し、`http(s)` 以外なら破棄
+- `link` / `imageUrl` は取得元 URL を base にした絶対 URL へ解決し、`http(s)` 以外なら破棄
+  （`data:` URI の画像も破棄する）
+- タグを除去した `summary` が **URL / パスの断片だけ**（空白を含まない `http(s)://…` または
+  `/…`）なら `undefined` にする。画像フィードの `description` は `<img>` + 同じパスの
+  繰り返しになりがちで、そのまま出すと意味のない文字列が並ぶため
+  （例: 遊戯王カードDB の「画像表示」フィード。リンクは `link` に別途持っている）
 - 記事は元の順序を保つ（フィードの並び順を尊重し、日付でのソートはしない）
 - 記事数の上限は 200 件。超過分は切り捨てる
 - 記事が 0 件でもフィードとしては成功扱い（「記事がありません」を表示）
@@ -273,16 +281,17 @@ GET のクエリ文字列だとフィード URL のエスケープが煩雑に�
 
 任意の URL をサーバから取得する = **SSRF の入口**になるため、`/lib/rss/url-guard.ts` で防ぐ。
 
-| 観点               | 対策                                                                                                                                                                                                                                                          |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| スキーム           | `http:` / `https:` のみ許可（`file:`, `gopher:`, `data:` などを拒否）                                                                                                                                                                                         |
-| 宛先ホスト         | `localhost` / `*.localhost` / `*.local` / `*.internal` / `*.home.arpa` は名前解決前に拒否。それ以外は数値・短縮表記の IP を含めて名前解決し、プライベート・ループバック・リンクローカル・CGNAT・予約レンジを拒否（複数レコードのうち 1 つでも該当したら拒否） |
-| クラウドメタデータ | `metadata.google.internal` / `metadata.goog` / `instance-data` を明示拒否（`169.254.0.0/16` は IP レンジ側でも拒否）                                                                                                                                          |
-| ポート             | 80 / 443 / 8080 / 8443 のみ許可                                                                                                                                                                                                                               |
-| リダイレクト       | 自前で追い、各ホップで上記検証を再実行（最大 3 ホップ）                                                                                                                                                                                                       |
-| 認証情報の転送     | リクエストヘッダは自前で組み立て、Cookie / Authorization は一切転送しない                                                                                                                                                                                     |
-| レスポンス         | XML を DOM へ流さず、タグ除去済みテキストのみ返す                                                                                                                                                                                                             |
-| リソース枯渇       | 8 秒タイムアウト・5MB 上限・記事 200 件上限                                                                                                                                                                                                                   |
+| 観点               | 対策                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| スキーム           | `http:` / `https:` のみ許可（`file:`, `gopher:`, `data:` などを拒否）                                                                                                                                                                                                                                                                                  |
+| 宛先ホスト         | `localhost` / `*.localhost` / `*.local` / `*.internal` / `*.home.arpa` は名前解決前に拒否。それ以外は数値・短縮表記の IP を含めて名前解決し、プライベート・ループバック・リンクローカル・CGNAT・予約レンジを拒否（複数レコードのうち 1 つでも該当したら拒否）                                                                                          |
+| クラウドメタデータ | `metadata.google.internal` / `metadata.goog` / `instance-data` を明示拒否（`169.254.0.0/16` は IP レンジ側でも拒否）                                                                                                                                                                                                                                   |
+| ポート             | 80 / 443 / 8080 / 8443 のみ許可                                                                                                                                                                                                                                                                                                                        |
+| リダイレクト       | 自前で追い、各ホップで上記検証を再実行（最大 3 ホップ）                                                                                                                                                                                                                                                                                                |
+| 認証情報の転送     | リクエストヘッダは自前で組み立て、Cookie / Authorization は一切転送しない                                                                                                                                                                                                                                                                              |
+| 画像の読み込み     | サムネイルはフィード提供元のホストから**ブラウザが直接**読む。閲覧者の IP / UA が提供元に渡るため、`referrerPolicy="no-referrer"` で参照元は送らない。`next/image` は許可ドメインの事前登録が必要で任意フィードには使えないので素の `<img loading="lazy">` を使う（画像も自前でプロキシすると任意 URL 中継の SSRF 面が増えるため、直接読み込みを選択） |
+| レスポンス         | XML を DOM へ流さず、タグ除去済みテキストのみ返す                                                                                                                                                                                                                                                                                                      |
+| リソース枯渇       | 8 秒タイムアウト・5MB 上限・記事 200 件上限                                                                                                                                                                                                                                                                                                            |
 
 拒否レンジ（IPv4 / IPv6）:
 
@@ -324,6 +333,10 @@ GET のクエリ文字列だとフィード URL のエスケープが煩雑に�
   - `description` の HTML タグが除去され、CDATA / エスケープ済み HTML が展開される
   - `<item>` が 0 件でも `ok` になる / `javascript:` リンクは破棄される
   - 記事 300 件のフィードが 200 件に切られ、順序が保たれる
+  - サムネイルの優先順位（`media:thumbnail` → 画像の `media:content` → 画像の `enclosure`
+    → 本文の `<img>`）と、音声 `enclosure` / `data:` URI を拾わないこと
+  - `<img src>` に含まれる実体参照（`&amp;amp;`）が戻ること、相対パスが絶対化されること
+  - 画像フィードの `description`（`<img>` + パスの繰り返し）が概要にならないこと
   - 概要が 400 文字で切られる / フィードでない XML は `not_feed`
 - `tests/rss/url-guard.test.ts`
   - `isBlockedAddress` の境界（`172.16.0.1` 拒否 / `172.32.0.1` 許可 など）
@@ -352,6 +365,6 @@ GET のクエリ文字列だとフィード URL のエスケープが煩雑に�
 
 - 複数フィードの束ね表示（日付でマージしたタイムライン）
 - OPML インポートによる一括読み込み
-- サムネイル表示（`media:thumbnail` / `enclosure` / og:image）
+- 記事ページの og:image 取得（フィードに画像が無いフィードのサムネイル補完）
 - サーバ側の短時間キャッシュ（Vercel Runtime Cache で 5 分程度）
 - 全文検索（取得済みフィードに対するクライアントサイド絞り込み）

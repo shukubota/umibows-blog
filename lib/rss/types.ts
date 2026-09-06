@@ -8,6 +8,8 @@ export interface FeedItem {
   author?: string;
   /** タグを除去したプレーンテキスト（最大 400 文字） */
   summary?: string;
+  /** サムネイル画像の絶対 URL（media:thumbnail / media:content / enclosure / description の img） */
+  imageUrl?: string;
 }
 
 export interface Feed {

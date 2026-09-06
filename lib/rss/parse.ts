@@ -127,6 +127,16 @@ function stripTags(value: string): string {
 }
 
 /**
+ * タグを除去した結果が URL / パスの断片だけなら概要としての情報がない。
+ * 画像フィードの `description` は `<img>` + 同じパスの繰り返しになりがちで、
+ * そのまま出すと意味のない文字列が並ぶため捨てる（リンクは別に持っている）。
+ */
+function isUrlNoise(plain: string): boolean {
+  if (/\s/.test(plain)) return false;
+  return /^(?:https?:\/\/|\/)\S*$/.test(plain);
+}
+
+/**
  * 概要テキストを組み立てる。HTML はタグを落としてプレーンテキストにする
  * （HTML をそのまま描画しない = サニタイザを持たずに XSS を避ける）。
  */
@@ -137,10 +147,69 @@ function summarize(raw: string): string | undefined {
   const plain = decodeEntities(stripTags(decodeEntities(raw)))
     .replace(/\s+/g, " ")
     .trim();
-  if (!plain) return undefined;
+  if (!plain || isUrlNoise(plain)) return undefined;
   return plain.length > FEED_LIMITS.summaryLength
     ? `${plain.slice(0, FEED_LIMITS.summaryLength)}…`
     : plain;
+}
+
+/** `media:thumbnail` / `media:content` から画像の URL を選ぶ */
+function mediaImageUrl(value: unknown, requireImage: boolean): string {
+  for (const node of toArray(value)) {
+    if (requireImage) {
+      const isImage = attr(node, "medium") === "image" || attr(node, "type").startsWith("image/");
+      if (!isImage) continue;
+    }
+    const url = firstNonEmpty(attr(node, "url"), text(node));
+    if (url) return url;
+  }
+  return "";
+}
+
+/** `<enclosure>` / Atom の `link[rel=enclosure]` から画像だけを拾う */
+function enclosureImageUrl(value: unknown, hrefName: string): string {
+  for (const node of toArray(value)) {
+    if (!attr(node, "type").startsWith("image/")) continue;
+    const url = attr(node, hrefName);
+    if (url) return url;
+  }
+  return "";
+}
+
+/** 本文 HTML の最初の `<img src>`。属性値の実体参照（`&amp;`）も戻す */
+function firstImgSrc(html: string): string {
+  if (!html) return "";
+  const matched = decodeEntities(unwrapCdata(html)).match(/<img[^>]+src\s*=\s*["']([^"']+)["']/i);
+  return matched ? decodeEntities(matched[1]).trim() : "";
+}
+
+/**
+ * サムネイル画像を探す。`media:thumbnail` → `media:content`（画像のみ）→
+ * `enclosure`（画像のみ）→ 本文 HTML の `<img>` の順に落とす。
+ */
+function extractImageUrl(
+  node: XmlNode,
+  baseUrl: string,
+  format: Feed["format"]
+): string | undefined {
+  const bodyHtml =
+    format === "atom"
+      ? firstNonEmpty(text(node.content), text(node.summary))
+      : firstNonEmpty(text(node["content:encoded"]), text(node.description));
+
+  const candidate = firstNonEmpty(
+    mediaImageUrl(node["media:thumbnail"], false),
+    mediaImageUrl(node["media:content"], true),
+    format === "atom"
+      ? enclosureImageUrl(
+          toArray(node.link).filter((link) => attr(link, "rel") === "enclosure"),
+          "href"
+        )
+      : enclosureImageUrl(node.enclosure, "url"),
+    firstImgSrc(bodyHtml)
+  );
+
+  return resolveUrl(candidate, baseUrl);
 }
 
 /** Atom の `<link>` から本文へのリンクを選ぶ。rel=alternate 優先、self / enclosure は除外 */
@@ -205,6 +274,7 @@ function buildItem(
     publishedAt,
     author: author || undefined,
     summary,
+    imageUrl: extractImageUrl(node, baseUrl, format),
   };
 }
 
