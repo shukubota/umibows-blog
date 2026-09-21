@@ -2,9 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
   pull_request:
     branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   lint-and-build:
@@ -67,6 +70,26 @@ jobs:
         run: |
           chmod +x .claude/skills/security-scan.sh
           ./.claude/skills/security-scan.sh
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "20.x"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Run Vitest
+        run: yarn test
 
   type-check:
     name: TypeScript Type Check
