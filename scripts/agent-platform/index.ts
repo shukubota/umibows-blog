@@ -11,7 +11,6 @@ async function main() {
     location,
     vertexai: true,
   });
-  console.log("aaa");
   const response = await client.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: "How does AI work?",
