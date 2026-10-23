@@ -2,7 +2,7 @@
 # docker build -f cloud-run/igo-api/Dockerfile -t igo-api .
 
 # ── Build stage ────────────────────────────────────────────────────────────
-FROM node:20-slim AS builder
+FROM node:22.23.4-slim AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ COPY cloud-run/igo-api/src/server.ts ./src/server.ts
 RUN npm run build
 
 # ── Runtime stage ──────────────────────────────────────────────────────────
-FROM node:20-slim
+FROM node:22.23.4-slim
 
 WORKDIR /app
 
