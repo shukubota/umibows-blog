@@ -5,6 +5,7 @@ export default function Home() {
     { id: "image-generator", title: "AI Image Generator", path: "/image-generator" },
     { id: "tex", title: "TeX Previewer", path: "/tex" },
     { id: "langtons-ant", title: "Langton's Ant Simulation", path: "/langtons-ant" },
+    { id: "buffon-needle", title: "Buffon's Needle — π の推定", path: "/buffon-needle" },
     { id: "double-pendulum", title: "Double Pendulum Simulation", path: "/double-pendulum" },
     {
       id: "numerical-comparison",
