@@ -92,9 +92,10 @@ export default function BuffonNeedlePage() {
     crossCountRef.current += newCross;
 
     const combined = [...needlesRef.current, ...batch];
-    needlesRef.current = combined.length > MAX_DISPLAY_NEEDLES
-      ? combined.slice(combined.length - MAX_DISPLAY_NEEDLES)
-      : combined;
+    needlesRef.current =
+      combined.length > MAX_DISPLAY_NEEDLES
+        ? combined.slice(combined.length - MAX_DISPLAY_NEEDLES)
+        : combined;
 
     draw();
     setThrowCount(throwCountRef.current);
@@ -143,13 +144,14 @@ export default function BuffonNeedlePage() {
           ビュッフォンの針 (Buffon&apos;s Needle)
         </h1>
         <p className="mb-2 text-gray-400 text-center max-w-2xl text-sm">
-          等間隔 D の平行線上に長さ L = D の針を N 回投げる。
-          線をまたいだ回数 C から <span className="font-mono text-blue-400">π ≈ 2N / C</span> が求まる。
+          等間隔 D の平行線上に長さ L = D の針を N 回投げる。 線をまたいだ回数 C から{" "}
+          <span className="font-mono text-blue-400">π ≈ 2N / C</span> が求まる。
         </p>
 
         <div className="mb-1 text-gray-500 text-xs text-center">
           <span className="text-red-400">赤</span> = 線をまたいだ針　／
-          <span className="text-blue-400">青</span> = またがなかった針（表示は最新 {MAX_DISPLAY_NEEDLES.toLocaleString()} 本）
+          <span className="text-blue-400">青</span> = またがなかった針（表示は最新{" "}
+          {MAX_DISPLAY_NEEDLES.toLocaleString()} 本）
         </div>
 
         <div className="relative rounded-lg overflow-hidden shadow-inner mb-6 mt-4 border border-gray-700">
