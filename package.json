@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -26,7 +26,6 @@
     "@google/genai": "^2.32.0",
     "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
-    "@langchain/anthropic": "^1.6.5",
     "@langchain/core": "^1.4.1",
     "@langchain/langgraph": "^1.7.4",
     "@line/liff": "^2.32.0",

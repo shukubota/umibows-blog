@@ -16,15 +16,6 @@
     json-schema-to-ts "^3.1.1"
     standardwebhooks "^1.0.0"
 
-"@anthropic-ai/sdk@^1.7.0":
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/@anthropic-ai/sdk/-/sdk-1.8.0.tgz#36da6bcea167b7f8cba56a39cd1ad5ecb990c5ee"
-  integrity sha512-yDOArk2+Qpd/djEKmZjrv7JZ+pn5iBHARJ9PAdvfhGf4H5wNqTgY/2K0/yDKdQdm8G8hrNQchMlBAHpPK7yBfg==
-  dependencies:
-    "@opentelemetry/api" "^1.4.1"
-    json-schema-to-ts "^3.1.1"
-    standardwebhooks "^1.0.0"
-
 "@anthropic-ai/vertex-sdk@^0.19.11":
   version "0.19.11"
   resolved "https://registry.yarnpkg.com/@anthropic-ai/vertex-sdk/-/vertex-sdk-0.19.11.tgz#f48dcfc4b0ecaf05a3a51d4582ab97fc6a06beef"
@@ -697,14 +688,6 @@
   dependencies:
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
-
-"@langchain/anthropic@^1.6.5":
-  version "1.6.5"
-  resolved "https://registry.yarnpkg.com/@langchain/anthropic/-/anthropic-1.6.5.tgz#126a538bccb33d5ee94416a412648c0f1e4f30b8"
-  integrity sha512-qB9bMeyRm46TI5ozkS66tPSnLu4Eayv+2R0aB7Uz79jwXZSEFRQ1i0uyov7xtPJW1R3EjbhpT2UuHy4x38pbAA==
-  dependencies:
-    "@anthropic-ai/sdk" "^1.7.0"
-    zod "^4.6.6"
 
 "@langchain/core@^1.4.1":
   version "1.4.1"

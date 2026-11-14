@@ -141,6 +141,13 @@ export async function* runAgentStream(
       yield { type: "error", message: "max_tokens reached", code: "LlmError" };
       throw new AgentError("LlmError", "max_tokens reached");
     }
+
+    yield {
+      type: "error",
+      message: `Unsupported stop reason: ${stopReason}`,
+      code: "UnsupportedStopReason",
+    };
+    throw new AgentError("UnsupportedStopReason", stopReason);
   }
 
   yield { type: "error", message: "MaxTurnsExceeded", code: "MaxTurnsExceeded" };
