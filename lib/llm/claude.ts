@@ -3,7 +3,7 @@ import { AgentError, LlmError } from "@/lib/agent/errors";
 import type { ContentBlock, Message, StopReason, ToolSpec, Usage } from "@/lib/agent/types";
 import { logger } from "@/lib/agent/logger";
 
-export const DEFAULT_MODEL = "claude-sonnet-4-5";
+export const DEFAULT_MODEL = "claude-sonnet-4-6";
 
 let _client: Anthropic | null = null;
 
