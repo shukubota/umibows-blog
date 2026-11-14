@@ -19,7 +19,7 @@
     "mcp:sync-view": "cd mcp-servers/mahjong-nanikiru && npm run build:view && cd ../.. && cp mcp-servers/mahjong-nanikiru/dist/hand.html app/api/mcp/mahjong-nanikiru/hand.html"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.137.0",
+    "@anthropic-ai/sdk": "^1.8.0",
     "@anthropic-ai/vertex-sdk": "^0.19.11",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
