@@ -18,7 +18,7 @@ const projectRoot = process.cwd();
 
 const config: AgentConfig = {
   model: {
-    primary: process.env.AGENT_MODEL_PRIMARY ?? "claude-sonnet-4-5",
+    primary: process.env.AGENT_MODEL_PRIMARY ?? "claude-sonnet-4-6",
     secondary: process.env.AGENT_MODEL_SECONDARY ?? "claude-haiku-4-5-20251001",
   },
   loop: { maxTurns: 20, maxTokens: 4096, toolTimeoutMs: 30_000 },

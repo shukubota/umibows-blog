@@ -1,7 +1,7 @@
 import YahooFinance from "yahoo-finance2";
 import { computeIndicators } from "./indicators";
 
-const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
+const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey", "ripHistorical"] });
 
 export type QuoteData = {
   symbol: string;
