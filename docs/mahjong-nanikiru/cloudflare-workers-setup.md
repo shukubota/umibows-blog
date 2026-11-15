@@ -13,10 +13,10 @@
 | 1   | Cloudflare アカウント作成      | 完了   |                                                                                 |
 | 2   | `wrangler login`               | 完了   | ローカル PC で実施                                                              |
 | 3   | KV namespace 作成              | 完了   | `OAUTH_KV` id `8fe5a65cebe14773985c4acd53e53aca`（`wrangler.jsonc` に記入済み） |
-| 4   | workers.dev サブドメイン確認   | 作業中 | 初回デプロイで `kubotashu0421` が割り当てられたため `umibows` に変更する        |
+| 4   | workers.dev サブドメイン確認   | 完了   | `kubotashu0421` から `umibows` に変更済み（2026-11-15）                         |
 | 5   | Google OAuth クライアント作成  | 未     |                                                                                 |
 | 6   | ローカル確認（`wrangler dev`） | 未     |                                                                                 |
-| 7   | Secrets 登録とデプロイ         | 未     |                                                                                 |
+| 7   | Secrets 登録とデプロイ         | 作業中 | デプロイ済み・Secrets 未登録（登録するまでログインできない）                    |
 | 8   | claude.ai から接続             | 未     |                                                                                 |
 
 ## 前提
@@ -56,7 +56,13 @@ npx wrangler@4 kv namespace create OAUTH_KV
 
 初回の `npx wrangler deploy` で、サブドメインが未登録なら登録を求められ、最後に URL が表示される。ダッシュボードで「Create application」から作る必要はない。
 
-サブドメインはあとから変えられる（ダッシュボードの Workers の設定 → Subdomain → Change）。変えると古い URL は使えなくなる。このプロジェクトでは `umibows.workers.dev` を使う。
+サブドメインはあとから変えられる。このプロジェクトでは `umibows.workers.dev` を使う。
+
+1. ダッシュボードの「Workers & Pages」を開く
+2. ページ下の「Account details」にある「Subdomain」の鉛筆アイコンを押す
+3. 新しいサブドメインを入力して「Continue」→ 確認画面で「Update」
+
+変えると古い URL はすぐ使えなくなり、新しい URL が使えるまで数分かかることがある。自分のアカウントで使用中の名前を入れると unavailable と表示される。
 
 `wrangler.jsonc` の `vars.MCP_RESOURCE` を次の形にする。
 
@@ -155,9 +161,11 @@ curl -i -X POST https://mahjong-nanikiru.umibows.workers.dev/mcp
 
 ## トラブルシュート
 
-| 症状                                                   | 確認すること                                                                                 |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| Google で `redirect_uri_mismatch`                      | 手順5のリダイレクト URI と、実際の URL（http/https、サブドメイン）が完全一致しているか       |
-| `/callback` で `access_denied`                         | ログインしたメールアドレスが `ALLOWED_EMAILS` に入っているか（大文字小文字は区別しない）     |
-| 「This authorization was not started in this browser」 | 同意画面を開いたのと同じブラウザで最後まで進めたか。10分以上かかると期限切れになる           |
-| claude.ai で接続できない                               | `/.well-known/oauth-protected-resource/mcp` の `resource` が `MCP_RESOURCE` と一致しているか |
+| 症状                                                   | 確認すること                                                                                  |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Google で `redirect_uri_mismatch`                      | 手順5のリダイレクト URI と、実際の URL（http/https、サブドメイン）が完全一致しているか        |
+| `/callback` で `access_denied`                         | ログインしたメールアドレスが `ALLOWED_EMAILS` に入っているか（大文字小文字は区別しない）      |
+| 「This authorization was not started in this browser」 | 同意画面を開いたのと同じブラウザで最後まで進めたか。10分以上かかると期限切れになる            |
+| サブドメイン変更後に `Could not resolve host`          | 変更前に引いた「存在しない」結果が手元の DNS に残っている。数分待つか `dig @1.1.1.1` で確認   |
+| 同意画面や `/callback` でエラーになる                  | Secrets（特に 32 文字以上の `COOKIE_ENCRYPTION_KEY`）が登録済みか。`npx wrangler secret list` |
+| claude.ai で接続できない                               | `/.well-known/oauth-protected-resource/mcp` の `resource` が `MCP_RESOURCE` と一致しているか  |
