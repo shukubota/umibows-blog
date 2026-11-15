@@ -144,7 +144,8 @@ async function handleCallback(request: Request, env: Env): Promise<Response> {
   if (!code) return deny("Missing authorization code from Google");
 
   const user = await fetchGoogleUser(request, env, code, data.verifier);
-  if (!user) return deny("Google sign-in failed");
+  // sub は userId に使うので、欠けている・想定外の文字を含む場合は通さない
+  if (!user || !/^[0-9A-Za-z_-]+$/.test(user.sub ?? "")) return deny("Google sign-in failed");
 
   // 許可リスト外の人には MCP 用トークンを発行しない
   const allowed = parseList(env.ALLOWED_EMAILS);
