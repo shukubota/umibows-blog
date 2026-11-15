@@ -18,7 +18,13 @@ cmd="$(jq -r '.tool_input.command // ""')"
 unquoted="$(sed -E "s/\"[^\"]*\"//g; s/'[^']*'//g" <<<"$cmd")"
 
 word() { grep -Eq "(^|[^[:alnum:]_-])$1([^[:alnum:]_-]|\$)" <<<"$unquoted"; }
-if ! { word git && word push; }; then
+# `git "push"` や `"git" push` のように語そのものを引用符で包んだ形は、
+# 引用符の文字だけ消してから「git → オプション → push」の並びで拾う
+dequoted="$(tr -d "\"'" <<<"$cmd")"
+subcommand_push() {
+  grep -Eq '(^|[^[:alnum:]_-])git([[:space:]]+-[^[:space:]]+([[:space:]]+[^-[:space:]][^[:space:]]*)?)*[[:space:]]+push([^[:alnum:]_-]|$)' <<<"$dequoted"
+}
+if ! { { word git && word push; } || subcommand_push; }; then
   exit 0
 fi
 
