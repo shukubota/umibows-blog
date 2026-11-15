@@ -22,8 +22,15 @@ npm run format     # Format code with Prettier
 ### Testing
 
 ```bash
-# No test framework configured yet
+npm run test           # Vitest
+scripts/ci-local.sh    # GitHub Actions (ci.yml) と同じチェックを手元で全部流す
 ```
+
+### Before push
+
+- `git push` の前に必ず `scripts/ci-local.sh` を通す（lockfile どおりの install → ESLint → Prettier → セキュリティスキャン → tsc → Vitest → next build）
+- Claude Code では `.claude/settings.json` の PreToolUse フックが `git push` を検知して自動で実行し、失敗したら push を止める
+- `ci.yml` のジョブを変えたら `scripts/ci-local.sh` も合わせて直す
 
 ## Environment Setup
 
