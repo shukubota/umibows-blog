@@ -26,7 +26,6 @@ export interface CompleteParams {
   tools?: ToolSpec[];
   toolChoice?: ToolChoice;
   maxTokens?: number;
-  temperature?: number;
   signal?: AbortSignal;
 }
 
@@ -77,7 +76,6 @@ export async function complete(p: CompleteParams): Promise<CompleteResult> {
           model,
           system: p.system,
           max_tokens: p.maxTokens ?? 4096,
-          temperature: p.temperature,
           tools: toAnthropicTools(p.tools),
           tool_choice: p.toolChoice as Anthropic.Messages.MessageCreateParams["tool_choice"],
           messages: p.messages.map((m) => ({
@@ -127,7 +125,6 @@ export async function* stream(
       model,
       system: p.system,
       max_tokens: p.maxTokens ?? 4096,
-      temperature: p.temperature,
       tools: toAnthropicTools(p.tools),
       messages: p.messages.map((m) => ({
         role: m.role,
