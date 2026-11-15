@@ -155,7 +155,8 @@ async function handleCallback(request: Request, env: Env): Promise<Response> {
   const props: Props = { sub: user.sub, email: user.email, name: user.name };
   const { redirectTo } = await oauth.completeAuthorization({
     request: original,
-    userId: `google:${user.sub}`,
+    // ライブラリはトークンを `userId:grantId:secret` で組み立てるため ":" を使えない
+    userId: `google-${user.sub}`,
     metadata: { email: user.email },
     scope: original.scope,
     props,
