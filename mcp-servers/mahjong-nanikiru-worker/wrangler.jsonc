@@ -16,7 +16,7 @@
   ],
   "vars": {
     // 本番の MCP エンドポイント URL。ローカルでは .dev.vars で http://localhost:8788/mcp に上書きする
-    "MCP_RESOURCE": "https://mahjong-nanikiru.REPLACE-WITH-SUBDOMAIN.workers.dev/mcp"
+    "MCP_RESOURCE": "https://mahjong-nanikiru.your-subdomain.workers.dev/mcp"
   },
   // hand.html（牌UI）を文字列として import する
   "rules": [{ "type": "Text", "globs": ["**/*.html"], "fallthrough": true }],

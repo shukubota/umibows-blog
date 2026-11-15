@@ -14,8 +14,9 @@ import "./env";
 import { GoogleHandler } from "./google-handler";
 import { mcpHandler } from "./mcp";
 
-// オプションはモジュール読み込み時に確定するため、vars は cloudflare:workers の env から読む
-const resource = env.MCP_RESOURCE;
+// オプションはモジュール読み込み時に確定するため、vars は cloudflare:workers の env から読む。
+// ライブラリはスキーム・ホストが小文字の正規形を要求するので、URL で正規化しておく。
+const resource = new URL(env.MCP_RESOURCE).href;
 
 export default new OAuthProvider({
   apiRoute: "/mcp",
