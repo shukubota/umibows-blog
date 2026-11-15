@@ -17,9 +17,11 @@ import {
 } from "@cloudflare/workers-oauth-provider";
 import type { Env, Props } from "./env";
 
-const GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
-const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
-const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
+const GOOGLE_ENDPOINTS = {
+  authorize: "https://accounts.google.com/o/oauth2/v2/auth",
+  token: "https://oauth2.googleapis.com/token",
+  userinfo: "https://openidconnect.googleapis.com/v1/userinfo",
+} as const;
 
 type UpstreamData = { verifier: string };
 
@@ -111,7 +113,7 @@ async function redirectToGoogle(
     headers,
   });
 
-  const google = new URL(GOOGLE_AUTHORIZE_URL);
+  const google = new URL(GOOGLE_ENDPOINTS.authorize);
   google.searchParams.set("client_id", env.GOOGLE_CLIENT_ID);
   google.searchParams.set("redirect_uri", callbackUrl(request));
   google.searchParams.set("response_type", "code");
@@ -173,7 +175,7 @@ async function fetchGoogleUser(
   code: string,
   verifier: string
 ): Promise<GoogleUserInfo | null> {
-  const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
+  const tokenRes = await fetch(GOOGLE_ENDPOINTS.token, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -192,7 +194,7 @@ async function fetchGoogleUser(
   const { access_token } = (await tokenRes.json()) as { access_token?: string };
   if (!access_token) return null;
 
-  const userRes = await fetch(GOOGLE_USERINFO_URL, {
+  const userRes = await fetch(GOOGLE_ENDPOINTS.userinfo, {
     headers: { Authorization: `Bearer ${access_token}` },
   });
   if (!userRes.ok) {
