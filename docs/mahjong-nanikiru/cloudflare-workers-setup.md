@@ -8,16 +8,16 @@
 
 ## 進捗
 
-| #   | 手順                           | 状態 | メモ                                                                            |
-| --- | ------------------------------ | ---- | ------------------------------------------------------------------------------- |
-| 1   | Cloudflare アカウント作成      | 完了 |                                                                                 |
-| 2   | `wrangler login`               | 完了 | ローカル PC で実施                                                              |
-| 3   | KV namespace 作成              | 完了 | `OAUTH_KV` id `8fe5a65cebe14773985c4acd53e53aca`（`wrangler.jsonc` に記入済み） |
-| 4   | workers.dev サブドメイン確認   | 未   | `wrangler.jsonc` の `MCP_RESOURCE` に反映する                                   |
-| 5   | Google OAuth クライアント作成  | 未   |                                                                                 |
-| 6   | ローカル確認（`wrangler dev`） | 未   |                                                                                 |
-| 7   | Secrets 登録とデプロイ         | 未   |                                                                                 |
-| 8   | claude.ai から接続             | 未   |                                                                                 |
+| #   | 手順                           | 状態   | メモ                                                                            |
+| --- | ------------------------------ | ------ | ------------------------------------------------------------------------------- |
+| 1   | Cloudflare アカウント作成      | 完了   |                                                                                 |
+| 2   | `wrangler login`               | 完了   | ローカル PC で実施                                                              |
+| 3   | KV namespace 作成              | 完了   | `OAUTH_KV` id `8fe5a65cebe14773985c4acd53e53aca`（`wrangler.jsonc` に記入済み） |
+| 4   | workers.dev サブドメイン確認   | 作業中 | 初回デプロイで `kubotashu0421` が割り当てられたため `umibows` に変更する        |
+| 5   | Google OAuth クライアント作成  | 未     |                                                                                 |
+| 6   | ローカル確認（`wrangler dev`） | 未     |                                                                                 |
+| 7   | Secrets 登録とデプロイ         | 未     |                                                                                 |
+| 8   | claude.ai から接続             | 未     |                                                                                 |
 
 ## 前提
 
@@ -54,12 +54,14 @@ npx wrangler@4 kv namespace create OAUTH_KV
 
 ## 4. workers.dev サブドメイン確認
 
-ダッシュボード左メニュー「Workers & Pages」に `<サブドメイン>.workers.dev` が表示される。未設定ならここで決める。
+初回の `npx wrangler deploy` で、サブドメインが未登録なら登録を求められ、最後に URL が表示される。ダッシュボードで「Create application」から作る必要はない。
+
+サブドメインはあとから変えられる（ダッシュボードの Workers の設定 → Subdomain → Change）。変えると古い URL は使えなくなる。このプロジェクトでは `umibows.workers.dev` を使う。
 
 `wrangler.jsonc` の `vars.MCP_RESOURCE` を次の形にする。
 
 ```
-https://mahjong-nanikiru.<サブドメイン>.workers.dev/mcp
+https://mahjong-nanikiru.umibows.workers.dev/mcp
 ```
 
 ## 5. Google OAuth クライアント作成
@@ -70,7 +72,7 @@ Google Cloud Console で作る。今の Vercel 版と同じ GCP プロジェク�
 2. 種類: ウェブアプリケーション、名前: `mahjong-nanikiru-worker`
 3. 承認済みのリダイレクト URI に次の2つを登録する
    - `http://localhost:8788/callback`
-   - `https://mahjong-nanikiru.<サブドメイン>.workers.dev/callback`
+   - `https://mahjong-nanikiru.umibows.workers.dev/callback`
 4. OAuth 同意画面が「外部・テスト中」なら、自分のメールアドレスをテストユーザーに追加する
 5. クライアント ID とクライアントシークレットを 1Password に保存する
 
@@ -129,13 +131,13 @@ npx wrangler deploy
 確認（トークンなしなので 401 と `WWW-Authenticate` が返れば正常）:
 
 ```bash
-curl -i -X POST https://mahjong-nanikiru.<サブドメイン>.workers.dev/mcp
+curl -i -X POST https://mahjong-nanikiru.umibows.workers.dev/mcp
 ```
 
 ## 8. claude.ai から接続
 
 1. 設定 → コネクタ → カスタムコネクタを追加
-2. URL に `https://mahjong-nanikiru.<サブドメイン>.workers.dev/mcp`
+2. URL に `https://mahjong-nanikiru.umibows.workers.dev/mcp`
 3. 同意画面で「許可して Google でログイン」→ 許可リストのアカウントでログイン
 4. 「1m2m3m4p5p6p7s8s9s東東白白中 何切る？」などと聞いて、牌UIが出れば完了
 
