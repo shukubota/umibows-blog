@@ -1,0 +1,9 @@
+# ローカル開発用（wrangler dev）。.dev.vars にコピーして値を入れる。.dev.vars はコミットしない。
+# 値はチャットに貼らず、1Password などから自分のターミナルで入れること。
+MCP_RESOURCE=http://localhost:8788/mcp
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+# 32文字以上のランダム文字列（例: openssl rand -hex 32）
+COOKIE_ENCRYPTION_KEY=
+# カンマ区切り
+ALLOWED_EMAILS=

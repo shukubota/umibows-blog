@@ -1,0 +1,25 @@
+// 何切る MCP（Cloudflare Workers + workers-oauth-provider 版）
+// 設計: docs/mahjong-nanikiru/remote-mcp-cloudflare-workers.md
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mahjong-nanikiru",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  // global_fetch_strictly_public: CIMD（Client ID Metadata Document）取得時に内部アドレスへ fetch させない
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_KV",
+      // `npx wrangler kv namespace create OAUTH_KV` で作成
+      "id": "8fe5a65cebe14773985c4acd53e53aca",
+    },
+  ],
+  "vars": {
+    // 本番の MCP エンドポイント URL。ローカルでは .dev.vars で http://localhost:8788/mcp に上書きする
+    "MCP_RESOURCE": "https://mahjong-nanikiru.umibows.workers.dev/mcp",
+  },
+  // hand.html（牌UI）を文字列として import する
+  "rules": [{ "type": "Text", "globs": ["**/*.html"], "fallthrough": true }],
+  "observability": { "enabled": true },
+  "dev": { "port": 8788 },
+}
