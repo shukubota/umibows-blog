@@ -13,7 +13,7 @@
 | 1   | Cloudflare アカウント作成      | 完了 |                                                                                 |
 | 2   | `wrangler login`               | 完了 | ローカル PC で実施                                                              |
 | 3   | KV namespace 作成              | 完了 | `OAUTH_KV` id `8fe5a65cebe14773985c4acd53e53aca`（`wrangler.jsonc` に記入済み） |
-| 4   | workers.dev サブドメイン確認   | 完了 | `kubotashu0421` から `umibows` に変更済み（2026-11-15）                         |
+| 4   | workers.dev サブドメイン確認   | 完了 | 初回に割り当てられた名前から `umibows` に変更済み（2026-11-15）                 |
 | 5   | Google OAuth クライアント作成  | 完了 |                                                                                 |
 | 6   | ローカル確認（`wrangler dev`） | 未   | 任意                                                                            |
 | 7   | Secrets 登録とデプロイ         | 完了 | Secrets 4つを `wrangler secret put` で登録（2026-11-15）                        |
