@@ -9,16 +9,22 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 failed=()
+log="$(mktemp -t ci-local)"
+trap 'rm -f "$log"' EXIT
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "⚠️  未コミットの変更があります。CI は push したコミットだけを見るので、結果が食い違うことがあります。"
+fi
 
 run() {
   local name="$1"
   shift
   echo "▶ ${name}"
-  if "$@" >/tmp/ci-local.$$.log 2>&1; then
+  if "$@" >"$log" 2>&1; then
     echo "  ✅ ${name}"
   else
     echo "  ❌ ${name}"
-    tail -n 40 /tmp/ci-local.$$.log | sed 's/^/    /'
+    tail -n 40 "$log" | sed 's/^/    /'
     failed+=("${name}")
   fi
 }
@@ -42,8 +48,6 @@ run "Vitest" yarn test
 if [[ "${SKIP_BUILD:-}" != "1" ]]; then
   run "Next build" env ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-dummy-key-for-build}" yarn build
 fi
-
-rm -f /tmp/ci-local.$$.log
 
 if ((${#failed[@]})); then
   echo ""
