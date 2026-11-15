@@ -2,7 +2,7 @@
 
 - 作成日: 2026-11-14
 - 元ドキュメント: https://claude.ai/artifact/8SGGDJu9GNDXnHqAztKjDG（内容はこのファイルと同じ。以後の更新はこのファイルを正とする）
-- 関連: [remote-mcp-google-oauth.md](./remote-mcp-google-oauth.md)（現行 Vercel 版の Google OAuth 設計）
+- 関連: [remote-mcp-google-oauth.md](./remote-mcp-google-oauth.md)（現行 Vercel 版の Google OAuth 設計）、[cloudflare-workers-setup.md](./cloudflare-workers-setup.md)（セットアップ・デプロイ手順）
 
 ## 概要
 
@@ -92,35 +92,7 @@ MCP 部分はステートレスの `createMcpHandler` を使い、Durable Object
 
 ## ユーザー作業の手順
 
-手順 1〜4 は実装と並行で進められる。手順 5 以降は実装ができてから行う。秘密情報はすべて自分のターミナルで入力し、チャットには貼らない。
-
-1. **Cloudflare アカウント作成**
-   - https://dash.cloudflare.com/sign-up でメールとパスワードを登録し、メール認証する（Free プランでよい。クレジットカード不要）
-   - ダッシュボード左メニュー「Workers & Pages」を一度開き、`*.workers.dev` のサブドメインを決める
-   - 会社メールと個人メールのどちらで作るかは社内ルールに従う
-2. **wrangler のログイン**（自分の PC のリポジトリで）
-   - `cd mcp-servers/mahjong-nanikiru-worker && npm install`
-   - `npx wrangler login` → ブラウザで許可
-   - `npx wrangler whoami` で確認
-3. **Google OAuth クライアント作成**（Google Cloud Console）
-   - 今の Vercel 版と同じ GCP プロジェクトでよい。「APIとサービス → 認証情報 → 認証情報を作成 → OAuth クライアント ID」
-   - 種類: ウェブアプリケーション、名前: `mahjong-nanikiru-worker`
-   - 承認済みリダイレクト URI: `http://localhost:8788/callback` と `https://mahjong-nanikiru.<サブドメイン>.workers.dev/callback`
-   - OAuth 同意画面が「外部・テスト中」なら、自分のメールをテストユーザーに入れる
-   - クライアント ID とシークレットを 1Password に保存
-4. **KV の作成**
-   - `npx wrangler kv namespace create OAUTH_KV` → 表示された id を `wrangler.jsonc` に記入（id は秘密情報ではないのでコミットしてよい）
-5. **ローカル確認**
-   - `.dev.vars.example` を `.dev.vars` にコピーし、`op read` などで値を自分で入れる（gitignore 済み）
-   - `npx wrangler dev` → `npx @modelcontextprotocol/inspector` で `http://localhost:8788/mcp` に接続し、OAuth→ツール呼び出しまで通す
-6. **Secrets 登録とデプロイ**
-   - `npx wrangler secret put GOOGLE_CLIENT_ID`（以下同様に `GOOGLE_CLIENT_SECRET`、`ALLOWED_EMAILS`）
-   - `openssl rand -hex 32 | npx wrangler secret put COOKIE_ENCRYPTION_KEY`
-   - `npx wrangler deploy` → 表示された URL を控える
-7. **claude.ai から接続**
-   - 設定 → コネクタ → カスタムコネクタを追加 → URL に `https://mahjong-nanikiru.<サブドメイン>.workers.dev/mcp`
-   - 同意画面 → Google ログイン → 何切るを聞いて牌UIが出れば完了
-   - 社の Claude 組織でカスタムコネクタの追加が制限されている場合は管理者への申請が必要
+Cloudflare 登録・`wrangler login`・KV 作成・Google OAuth クライアント作成・Secrets 登録・デプロイ・claude.ai 接続の手順と進捗は、手順書 [cloudflare-workers-setup.md](./cloudflare-workers-setup.md) にまとめた。
 
 ## 進め方と確認方法
 

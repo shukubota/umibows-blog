@@ -38,7 +38,7 @@ npx @modelcontextprotocol/inspector
 
 ## デプロイ
 
-初回の手順（Cloudflare 登録、Google OAuth クライアント作成、KV 作成、Secrets 登録）は設計書の「ユーザー作業の手順」を参照。
+初回の手順（Cloudflare 登録、Google OAuth クライアント作成、KV 作成、Secrets 登録）は[docs/mahjong-nanikiru/cloudflare-workers-setup.md](../../docs/mahjong-nanikiru/cloudflare-workers-setup.md) を参照。
 
 ```bash
 npx wrangler deploy
