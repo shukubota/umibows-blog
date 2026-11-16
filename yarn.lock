@@ -7,16 +7,7 @@
   resolved "https://registry.yarnpkg.com/@alloc/quick-lru/-/quick-lru-5.3.0.tgz#9073d52ad3cebbedd0d8c9f3e65aa5527fabd1e0"
   integrity sha512-U4+70Pc5ZS9osnCBCE5Jha/ciHM+Yp+CNMNC/7HvYbNRk1Ldd+f7qO65W5qfhu/TCv+/ozljlXXe9Nj8419DMA==
 
-"@anthropic-ai/sdk@>=0.115.1 <1":
-  version "0.137.0"
-  resolved "https://registry.yarnpkg.com/@anthropic-ai/sdk/-/sdk-0.137.0.tgz#4620a3e9138757862d10211406afde13d4c0bf4d"
-  integrity sha512-YpEnbPz8kWF1BWthwUCnRhci7OvDLSUO8NFKoevoPkjNkK9CJeibZITgxr9vhqOP8Le61e5tNDHFTxw1dc6Png==
-  dependencies:
-    "@opentelemetry/api" "^1.4.1"
-    json-schema-to-ts "^3.1.1"
-    standardwebhooks "^1.0.0"
-
-"@anthropic-ai/sdk@^1.8.0":
+"@anthropic-ai/sdk@>=1.0.0 <2", "@anthropic-ai/sdk@^1.8.0":
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/@anthropic-ai/sdk/-/sdk-1.8.0.tgz#36da6bcea167b7f8cba56a39cd1ad5ecb990c5ee"
   integrity sha512-yDOArk2+Qpd/djEKmZjrv7JZ+pn5iBHARJ9PAdvfhGf4H5wNqTgY/2K0/yDKdQdm8G8hrNQchMlBAHpPK7yBfg==
@@ -25,12 +16,13 @@
     json-schema-to-ts "^3.1.1"
     standardwebhooks "^1.0.0"
 
-"@anthropic-ai/vertex-sdk@^0.19.11":
-  version "0.19.11"
-  resolved "https://registry.yarnpkg.com/@anthropic-ai/vertex-sdk/-/vertex-sdk-0.19.11.tgz#f48dcfc4b0ecaf05a3a51d4582ab97fc6a06beef"
-  integrity sha512-yrXCUBL4RiW1dK/So/jyMCutDX2KeiY7jyOIWkU1qiZbuhWoIzPk7s1BDL+QaTKnScX+Ygg+/HHLAcgp9jEsUg==
+"@anthropic-ai/vertex-sdk@^1.1.3":
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/@anthropic-ai/vertex-sdk/-/vertex-sdk-1.1.3.tgz#d76c8cab7bb2328b1077a1092c8770215f445a17"
+  integrity sha512-SPxyv+M38XxLqY7zeAKutZe9/3VgJZ6ZJZa6W4z3HGj6G46JvnuPviRllq6KIn9TTXQMoKRWeFiT1YmKccOCvA==
   dependencies:
-    "@anthropic-ai/sdk" ">=0.115.1 <1"
+    "@anthropic-ai/sdk" ">=1.0.0 <2"
+    "@opentelemetry/api" "^1.4.1"
     google-auth-library "^10.2.0"
 
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.29.7":
