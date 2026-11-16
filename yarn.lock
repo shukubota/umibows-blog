@@ -2286,13 +2286,13 @@
   resolved "https://registry.yarnpkg.com/@unrs/resolver-binding-win32-x64-msvc/-/resolver-binding-win32-x64-msvc-1.13.0.tgz#46249f4bb36f4c2e8430baa98feab0c890444a7d"
   integrity sha512-DpLMlAqlrk4zBVK3DiDjwKD0oq7pZNy+8BiIBRuByqb6dm5jsdoLMhIiyh/xR7+WejaW/1Ui+XgbgMNa4+zWJg==
 
-"@vercel/cli-config@0.3.1":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@vercel/cli-config/-/cli-config-0.3.1.tgz#8baf0f6692c0b1d22d870cd9a57e34ab8d0485c0"
-  integrity sha512-sISbygqlFXYb8qfPu/+2Cf/A8IjrlAuZePdag3EDQr2PRA455s7UZtl9Ro674CWsB/saBRmz3jEkw0YsQs8OoQ==
+"@vercel/cli-config@0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@vercel/cli-config/-/cli-config-0.4.0.tgz#2556206f23b803cb0f41bf2cbb41434d3666afeb"
+  integrity sha512-7+DnWjfcHA/u2FjiPMknhlqZFmJZZq1qS5ziIxNH+3zNBo2U4NQjkJABKDGMZlLBlBLK94RXuA2dceC4SCFumA==
   dependencies:
-    xdg-app-paths "5"
-    zod "4.1.11"
+    xdg-app-paths "5.1.0"
+    zod "^4.6.6"
 
 "@vercel/cli-exec@1.0.1":
   version "1.0.1"
@@ -2301,12 +2301,12 @@
   dependencies:
     execa "5.1.1"
 
-"@vercel/oidc@^3.8.10":
-  version "3.8.10"
-  resolved "https://registry.yarnpkg.com/@vercel/oidc/-/oidc-3.8.10.tgz#bc4c2489bb53ab52fed7194c4c6649ea4e2af400"
-  integrity sha512-sPw1kIfQEA6/2dB+zlAJHnhhNBRJ8t/t4HfFvKO+g0EPBA7NbCKyGovuhgAV6Mnl865ka7HqCEguIy596czdAw==
+"@vercel/oidc@^4.0.9":
+  version "4.0.9"
+  resolved "https://registry.yarnpkg.com/@vercel/oidc/-/oidc-4.0.9.tgz#fdfc2c3d29c86df04bfb2349b9e5b104f0cf03ef"
+  integrity sha512-LBNEPlKHv3ZAhOX2Dcj1hrxdmqYrdzxukGltouKbyjU8IeJvAFSuOHn5X0ZWg0qG2huANcgrHAb03giWeUyubQ==
   dependencies:
-    "@vercel/cli-config" "0.3.1"
+    "@vercel/cli-config" "0.4.0"
     "@vercel/cli-exec" "1.0.1"
     jose "^5.9.6"
 
@@ -6623,15 +6623,14 @@ ws@^8.18.0:
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.23.0.tgz#e1af4314ad9d4cfde4684d08a9f09b322830e84e"
   integrity sha512-wCkmX8QMOrKjgO8HW2WyDbTSGeqkocxgDzS9iR79rEAexty6/2qzilx3Ag8Tqf9ykop3irLKle0MtVn5qjVnoQ==
 
-xdg-app-paths@5:
-  version "5.5.1"
-  resolved "https://registry.yarnpkg.com/xdg-app-paths/-/xdg-app-paths-5.5.1.tgz#2d5e94218c6fc4e9b742503889dfd29bbd336b8c"
-  integrity sha512-hI3flOB4PLZIy5prbtTpirobtPE2ZtZ52szO+2mM9Efp6ErM398La+C1lIpNWDfNoQk+6Lsi6nMcCwVB7pxeMQ==
+xdg-app-paths@5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/xdg-app-paths/-/xdg-app-paths-5.1.0.tgz#f52f724f91e88244148c085c09bcd396443d8cae"
+  integrity sha512-RAQ3WkPf4KTU1A8RtFx3gWywzVKe00tfOPFfl2NDGqbIFENQO4kqAJp7mhQjNj/33W5x5hiWWUdyfPq/5SU3QA==
   dependencies:
-    os-paths "^4.0.1"
-    xdg-portable "^7.2.0"
+    xdg-portable "^7.0.0"
 
-xdg-portable@^7.2.0:
+xdg-portable@^7.0.0:
   version "7.3.0"
   resolved "https://registry.yarnpkg.com/xdg-portable/-/xdg-portable-7.3.0.tgz#c6b1610de806a2ca1fe65727d5f8402c295d2e96"
   integrity sha512-sqMMuL1rc0FmMBOzCpd0yuy9trqF2yTTVe+E9ogwCSWQCdDEtQUwrZPT6AxqtsFGRNxycgncbP/xmOOSPw5ZUw==
@@ -6676,7 +6675,7 @@ zod-to-json-schema@^3.25.1:
   resolved "https://registry.yarnpkg.com/zod-to-json-schema/-/zod-to-json-schema-3.25.2.tgz#3fa799a7badd554541472fb65843fdc460b2e5aa"
   integrity sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==
 
-zod@4.1.11, zod@4.6.7, "zod@^3.25 || ^4.0", zod@^4.6.6, zod@^4.6.7, "zod@npm:zod@^4.6.5":
+zod@4.6.7, "zod@^3.25 || ^4.0", zod@^4.6.6, zod@^4.6.7, "zod@npm:zod@^4.6.5":
   version "4.6.7"
   resolved "https://registry.yarnpkg.com/zod/-/zod-4.6.7.tgz#e806cf64a7f4e37635ce9f2f52c04c3766f75e5b"
   integrity sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==
