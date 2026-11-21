@@ -19,6 +19,7 @@ export default function Home() {
       title: "大気の波 — 慣性波・重力波・筋雲",
       path: "/atmospheric-waves",
     },
+    { id: "clouds", title: "十種雲形 — 10種類の雲と、そのでき方の数式", path: "/clouds" },
     { id: "igo", title: "Igo (Go Game)", path: "/igo" },
     { id: "weather-map", title: "Weather Map (Windy)", path: "/weather-map" },
     { id: "company-english", title: "Company English Q&A", path: "/company-english" },
