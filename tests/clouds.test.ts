@@ -45,6 +45,11 @@ describe("十種雲形のデータ", () => {
     expect(new Set(GENERA.map((g) => g.id)).size).toBe(10);
   });
 
+  it("10種すべての本文と「雲ができるしくみ」がそろっている", () => {
+    expect(BASICS.length).toBeGreaterThan(0);
+    expect(ARTICLES.map((a) => a.id).sort()).toEqual(GENERA.map((g) => g.id).sort());
+  });
+
   it("各雲の本文は1つだけで、自分の層のファイルに置かれている", () => {
     expect(new Set(ARTICLES.map((a) => a.id)).size).toBe(ARTICLES.length);
     for (const [level, articles] of Object.entries(ARTICLES_BY_LEVEL)) {

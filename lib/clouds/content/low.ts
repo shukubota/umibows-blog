@@ -192,7 +192,7 @@ export const lowClouds: CloudArticle[] = [
             caption: "コシュミーダーの法則（視程と消散係数の関係）",
           },
           {
-            tex: String.raw`\beta = N\,Q_{\text{ext}}\,\pi r^{2} \approx 2\pi N r^{2} = \frac{3W}{\rho_w\,r}`,
+            tex: String.raw`\beta = N\,Q_{\text{ext}}\,\pi r^{2} \approx 2\pi N r^{2} = \frac{3W}{2\rho_w\,r}`,
             caption: String.raw`雲粒による消散係数（大きさのそろった粒、$Q_{\text{ext}} \approx 2$ とした近似）`,
           },
           {

@@ -4,7 +4,7 @@ import type { MathBlock } from "@/lib/clouds/types";
 
 // 数式はすべてこのリポジトリ内の固定文字列なので、サーバー側で KaTeX の HTML にして埋め込む。
 function renderTex(tex: string, displayMode: boolean): string {
-  return katex.renderToString(tex, { displayMode, throwOnError: false, output: "html" });
+  return katex.renderToString(tex, { displayMode, throwOnError: false });
 }
 
 /** $...$ をインライン数式として描画する文 */
