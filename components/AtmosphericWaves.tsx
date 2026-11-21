@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
   bruntVaisala,
   computeMountainWaves,
@@ -1021,6 +1022,15 @@ function CloudPanel() {
           そのため、空気は風に乗って通り過ぎていくのに、
           <strong className="text-white">雲は同じ場所にとどまって</strong>
           山脈と平行な筋が何本も並びます（断面図の点が雲に入ると白く光り、出ると青に戻るのを見てください）。衛星写真で山脈の風下に縞模様として写る波状雲がこれです。
+          雲の種類としては主に
+          <Link href="/clouds#altocumulus" className="text-sky-300 hover:underline">
+            高積雲
+          </Link>
+          （レンズ雲）で、
+          <Link href="/clouds" className="text-sky-300 hover:underline">
+            十種雲形のページ
+          </Link>
+          で他の雲と並べて説明しています。
         </p>
         <Formula>持ち上げ η ≥ 約125 m × 露点差 → 雲</Formula>
         <p>
