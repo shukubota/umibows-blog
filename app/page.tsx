@@ -14,6 +14,11 @@ export default function Home() {
     },
     { id: "lorenz", title: "Lorenz Attractor Simulation", path: "/lorenz" },
     { id: "planet-motion", title: "Planetary Motion Simulation", path: "/planet-motion" },
+    {
+      id: "atmospheric-waves",
+      title: "大気の波 — 慣性波・重力波・筋雲",
+      path: "/atmospheric-waves",
+    },
     { id: "igo", title: "Igo (Go Game)", path: "/igo" },
     { id: "weather-map", title: "Weather Map (Windy)", path: "/weather-map" },
     { id: "company-english", title: "Company English Q&A", path: "/company-english" },
