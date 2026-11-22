@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ARTICLES, BASICS, GENERA, LEVEL_LABEL, LEVEL_ORDER } from "@/lib/clouds";
 import type { CloudArticle, CloudGenus, CloudSection } from "@/lib/clouds";
+import CloudSimSection from "./CloudSimSection";
 import { Equation, RichText } from "./Tex";
 
 const LEVEL_COLOR: Record<CloudGenus["level"], string> = {
@@ -112,6 +113,7 @@ function CloudCard({ genus, article }: { genus: CloudGenus; article?: CloudArtic
               </ul>
             </div>
           )}
+          <CloudSimSection id={genus.id} />
           {article.sections.map((s, i) => (
             <Section key={i} section={s} />
           ))}
