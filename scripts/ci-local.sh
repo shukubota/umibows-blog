@@ -9,7 +9,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 failed=()
-log="$(mktemp -t ci-local)"
+log="$(mktemp "${TMPDIR:-/tmp}/ci-local.XXXXXX")"
 trap 'rm -f "$log"' EXIT
 
 if [[ -n "$(git status --porcelain)" ]]; then
