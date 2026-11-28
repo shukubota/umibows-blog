@@ -143,6 +143,10 @@ export default function CloudsPage() {
             <Link href="/atmospheric-waves" className="text-sky-300 hover:underline">
               山岳波で筋雲が並ぶシミュレーション（大気の波）→
             </Link>
+            <span className="text-gray-600">　</span>
+            <Link href="/baroclinic" className="text-sky-300 hover:underline">
+              低気圧と前線の雲の帯が育つシミュレーション（傾圧不安定）→
+            </Link>
           </p>
         </header>
 

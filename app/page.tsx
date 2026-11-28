@@ -20,6 +20,11 @@ export default function Home() {
       path: "/atmospheric-waves",
     },
     { id: "clouds", title: "十種雲形 — 10種類の雲と、そのでき方の数式", path: "/clouds" },
+    {
+      id: "baroclinic",
+      title: "傾圧不安定 — 衛星画像の雲の帯を方程式から",
+      path: "/baroclinic",
+    },
     { id: "igo", title: "Igo (Go Game)", path: "/igo" },
     { id: "weather-map", title: "Weather Map (Windy)", path: "/weather-map" },
     { id: "company-english", title: "Company English Q&A", path: "/company-english" },
